@@ -38,8 +38,7 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="TextLogger, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="TextLogger">
       <HintPath>..\TextLogger\bin\Release\TextLogger.dll</HintPath>
     </Reference>
   </ItemGroup>
