@@ -1049,62 +1049,6 @@ namespace KukaMatlabConnector
 
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         /**
-         *  @brief    returns the actual saved robot infos as XML-Document
-         *            
-         *  @retval   XmlDocument ... actual robot info data
-         */
-        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public System.Xml.XmlDocument getActRobotInfoData()
-        {
-            System.Xml.XmlDocument actServerData;
-            String localRobotInfoString;
-
-            actServerData = new System.Xml.XmlDocument();
-
-            localRobotInfoString = getRobotInfoString();
-
-            try
-            {
-                actServerData.LoadXml(localRobotInfoString);
-            }
-            catch
-            {
-                actServerData = null;
-            }
-
-            return actServerData;
-        }
-
-        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        /**
-         *  @brief    returns the actual saved command data as XML-Document
-         *            
-         *  @retval   XmlDocument ... actual command data
-         */
-        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public System.Xml.XmlDocument getActCommandData()
-        {
-            System.Xml.XmlDocument actCommandData = null;
-            String localCommandString;
-
-            actCommandData = new System.Xml.XmlDocument();
-
-            localCommandString = getCommandString();
-
-            try
-            {
-                actCommandData.LoadXml(localCommandString);
-            }
-            catch
-            {
-                actCommandData = null;
-            }
-
-            return actCommandData;
-        }
-
-        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        /**
          *  @brief    modify the trajectory with one command
          *  
          *  @param    command ... given the command for all cartesian axis in the following format: (R:1:2:3:4:5:6) => 1-6 are double values e.g.: 0,234
@@ -1654,7 +1598,7 @@ namespace KukaMatlabConnector
          *  @retval   total number of send packages from the current session
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public long getPackagesSendCounter()
+        public long getPackagesSentCounter()
         {
             long returnal;
 
@@ -1688,7 +1632,7 @@ namespace KukaMatlabConnector
          *  @retval   none
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public void loadCommandXML(String newCommandString)
+        private void loadCommandXML(String newCommandString)
         {
             mutexRobotCommandXML_.WaitOne();
 
@@ -1704,7 +1648,7 @@ namespace KukaMatlabConnector
          *  @retval   actual xml saved command string
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public String getCommandInnerXML()
+        private String getCommandInnerXML()
         {
             String returnString;
 
@@ -1726,7 +1670,7 @@ namespace KukaMatlabConnector
          *  @retval   none
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public void loadInfoXML(String newInfoString)
+        private void loadInfoXML(String newInfoString)
         {
             mutexRobotInfoXML_.WaitOne();
 
@@ -1742,7 +1686,7 @@ namespace KukaMatlabConnector
          *  @retval   string with the actual data saved in the robot info xmldocument
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public String getInfoInnerXML()
+        private String getRobotInfoInnerXML()
         {
             String returnString;
 
