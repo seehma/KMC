@@ -1,0 +1,9 @@
+<Sen Type="KMC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="commanddoc.xsd">
+   <Dat TaskType="b">
+      <EStr>Info: ERX Message!</EStr>
+      <RKorr X="0.0000" Y="0.0000" Z="0.0000" A="0.0000" B="0.0000" C="0.0000" />
+      <AKorr A1="0.0000" A2="0.0000" A3="0.0000" A4="0.0000" A5="0.0000" A6="0.0000" />
+      <DiO>0</DiO>
+      <IPOC>0000000000</IPOC>
+   </Dat>
+</Sen>

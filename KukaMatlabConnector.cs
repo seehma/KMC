@@ -1,4 +1,24 @@
-﻿using System;
+﻿/**
+ * Kuka Matlab Connector Toolbox
+ * 
+ * Author:      Matthias Seehauser
+ *              matthias@seehauser.at
+ *              http://www.seesle.at
+ * Date:        01.05.2014
+ * Institution: MCI - Mechatronics
+ *              http://www.mci.at
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -111,76 +131,62 @@ namespace KukaMatlabConnector
         // ------------------------------------------------------------------------------------------------------------------
         // buffer and other variables for synchron mode writing
         // ------------------------------------------------------------------------------------------------------------------
-        bool synchronModeRKorrActive_;
-        bool synchronModeAKorrActive_;
+        bool synchronModeRKorrActive_; // true if the RKorr synchron mode is active
+        bool synchronModeAKorrActive_; // true if the AKorr synchron mode is active
+        const uint synchronKorrBufferSize_ = 255; // buffer size of synchron mode buffer
+        uint synchronKorrBufferReadPointer_; // read pointer of synchron mode buffer
+        uint synchronKorrBufferWritePointer_; // write pointer of synchron mode buffer
 
-        const uint synchronAKorrBufferSize_ = 255;
-        const uint synchronRKorrBufferSize_ = 255;
+        synchronKorrBufferStruct[] synchronKorrBuffer_ ; // pointer to synchron mode buffer
 
-        uint synchronAKorrBufferReadPointer_;
-        uint synchronAKorrBufferWritePointer_;
-        uint synchronRKorrBufferReadPointer_;
-        uint synchronRKorrBufferWritePointer_;
-
-        synchronAKorrBufferStruct[] synchronAKorrBuffer_ ;
-        synchronRKorrBufferStruct[] synchronRKorrBuffer_;
-
-        public struct synchronAKorrBufferStruct
+        // declaration of synchron mode buffer
+        public struct synchronKorrBufferStruct
         {
-            public double AKorr1;
-            public double AKorr2;
-            public double AKorr3;
-            public double AKorr4;
-            public double AKorr5;
-            public double AKorr6;
+            public double Korr1; // filled with AKorr1 in case of AKorr mode active and RKorrX in case of RKorr mode active
+            public double Korr2; // filled with AKorr2 in case of AKorr mode active and RKorrY in case of RKorr mode active
+            public double Korr3; // filled with AKorr3 in case of AKorr mode active and RKorrZ in case of RKorr mode active
+            public double Korr4; // filled with AKorr4 in case of AKorr mode active and RKorrA in case of RKorr mode active
+            public double Korr5; // filled with AKorr5 in case of AKorr mode active and RKorrB in case of RKorr mode active
+            public double Korr6; // filled with AKorr6 in case of AKorr mode active and RKorrC in case of RKorr mode active
 
-            public synchronAKorrBufferStruct(double extAKorr1, double extAKorr2, double extAKorr3, double extAKorr4, double extAKorr5, double extAKorr6)
+            public synchronKorrBufferStruct(double extKorr1, double extKorr2, double extKorr3, double extKorr4, double extKorr5, double extKorr6)
             {
-                AKorr1 = extAKorr1;
-                AKorr2 = extAKorr2;
-                AKorr3 = extAKorr3;
-                AKorr4 = extAKorr4;
-                AKorr5 = extAKorr5;
-                AKorr6 = extAKorr6;
-            }
-        }
-
-        public struct synchronRKorrBufferStruct
-        {
-            public double RKorrX;
-            public double RKorrY;
-            public double RKorrZ;
-            public double RKorrA;
-            public double RKorrB;
-            public double RKorrC;
-
-            public synchronRKorrBufferStruct(double extRKorrX, double extRKorrY, double extRKorrZ, double extRKorrA, double extRKorrB, double extRKorrC)
-            {
-                RKorrX = extRKorrX;
-                RKorrY = extRKorrY;
-                RKorrZ = extRKorrZ;
-                RKorrA = extRKorrA;
-                RKorrB = extRKorrB;
-                RKorrC = extRKorrC;
+                Korr1 = extKorr1;
+                Korr2 = extKorr2;
+                Korr3 = extKorr3;
+                Korr4 = extKorr4;
+                Korr5 = extKorr5;
+                Korr6 = extKorr6;
             }
         }
 
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         /**
-         *  @brief 
+         *  @brief     Constructor of connector object
          * 
+         *  @param     pathToCommandXMLDocument ... here you will have to give the path for the command xml document; the easiest way is to place it in 
+         *                                          the same directory as the dll is then you only have to enter the name here; otherwise give the full
+         *                                          path;
+         *             listenIPAddress ... IP-Address as string where the wrapper has to listen for the robot connection; normally its an LAN adapter
+         *                                 address; try to figure it out with Windows Start Button -> Run -> cmd Enter; then enter ipconfig and press
+         *                                 Enter => search for the local area network adapter an its ip address
+         *             listenPort ... Normally this value has to be set to 6008 if not other set in KUKA Config XML file on controller (INIT directory)
          * 
-         * 
+         *  @retval    none...
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         public ConnectorObject(String pathToCommandXMLDocument, String listenIPAddress, uint listenPort)
         {
             int iError = 0;
 
-            // initialize all instances
-            logger_ = new TextLogger.TextLogger( 255 );
+            // ------------------------------------------------
+            // initialize all other needed instances
+            // ------------------------------------------------
+            logger_ = new TextLogger.TextLogger( 255 ); // 255 is buffer size of logger
 
+            // ------------------------------------------------------------------------
             // initialize all communication variables and check if valid (if possible)
+            // ------------------------------------------------------------------------
             if ((listenPort > 1024) && (listenPort < 65535))
             {
                 robotCommunicationPort_ = listenPort;
@@ -188,21 +194,6 @@ namespace KukaMatlabConnector
             else
             {
                 robotCommunicationPort_ = 6008;
-            }
-
-            // initialize comBuffer and according variables
-            comBuffer_ = new byte[comBufferSize_];
-            comBufferReadPointer_ = 0;
-            comBufferWritePointer_ = 0;
-
-            // check if the path is correct otherwise take a file located in the same folder as the client is
-            if ((pathToCommandXMLDocument != null) && (pathToCommandXMLDocument.Length != 0))
-            {
-                pathToCommandXMLDocument_ = pathToCommandXMLDocument;
-            }
-            else
-            {
-                pathToCommandXMLDocument_ = "commanddoc.xml";
             }
 
             // check if the ipAddress is correct otherwise write a logMessage and exit
@@ -215,41 +206,77 @@ namespace KukaMatlabConnector
                 logger_.addMessage("please give a correct IP-address...");
                 iError = 1;
             }
-            robotConnectionState_ = new ConnectionState();
 
+            // --------------------------------------------------
+            // initialize comBuffer and according variables
+            // --------------------------------------------------
+            comBufferReadPointer_ = 0;
+            comBufferWritePointer_ = 0;
+            comBuffer_ = new byte[comBufferSize_];
+            
+            // ---------------------------------------------------------------------------------------------------
+            // check if the path is correct otherwise take a file located in the same folder as the client is
+            // ---------------------------------------------------------------------------------------------------
+            if ((pathToCommandXMLDocument != null) && (pathToCommandXMLDocument.Length != 0))
+            {
+                pathToCommandXMLDocument_ = pathToCommandXMLDocument;
+            }
+            else
+            {
+                pathToCommandXMLDocument_ = "commanddoc.xml";
+            }
+
+            // -----------------------------------------
             // initialize the connection states
+            // -----------------------------------------
+            robotConnectionState_ = new ConnectionState();
             setRobotConnectionState(ConnectionState.init);
 
+            // -----------------------------------------
             // initialize the stop watches
+            // -----------------------------------------
             stopWatch_ = new System.Diagnostics.Stopwatch();
             stopWatchReceive_ = new System.Diagnostics.Stopwatch();
             stopWatchSend_ = new System.Diagnostics.Stopwatch();
 
+            // -----------------------------------------
+            // reset all statistical variables
+            // -----------------------------------------
             receivedPackagesCount_ = 0;
             sendPackagesCount_ = 0;
-
-            // allow commands from initial state
-            lockCorrectionCommands_ = false;
-
-            // reset synchron mode flags
-            synchronModeAKorrActive_ = false;
-            synchronModeRKorrActive_ = false;
-
-            synchronAKorrBuffer_ = new synchronAKorrBufferStruct[synchronAKorrBufferSize_];
-            synchronRKorrBuffer_ = new synchronRKorrBufferStruct[synchronRKorrBufferSize_];
-
-            mutexRobotCommandString_ = new System.Threading.Mutex(false, "robotCommandString");
-            mutexRobotInfoString_ = new System.Threading.Mutex(false, "robotInfoString");
-            mutexRobotCommandXML_ = new System.Threading.Mutex(false, "robotCommandXML");
-            mutexRobotInfoXML_ = new System.Threading.Mutex(false, "robotInfoXML");
-
             communicationTimeMilliSeconds_ = 0;
             communicationTimeTicks_ = 0;
             delayedPackagesCount_ = 0;
 
+            // allow commands from initial state
+            lockCorrectionCommands_ = false;
+
+            // -----------------------------------------
+            // reset synchron mode flags
+            // -----------------------------------------
+            synchronModeAKorrActive_ = false;
+            synchronModeRKorrActive_ = false;
+            synchronKorrBufferReadPointer_ = 0;
+            synchronKorrBufferWritePointer_ = 0;
+            synchronKorrBuffer_ = new synchronKorrBufferStruct[synchronKorrBufferSize_];
+
+            // ------------------------------------------------------------------------------------
+            // initilize all mutexes 
+            // ------------------------------------------------------------------------------------
+            mutexRobotCommandString_ = new System.Threading.Mutex(false, "robotCommandString");
+            mutexRobotInfoString_ = new System.Threading.Mutex(false, "robotInfoString");
+            mutexRobotCommandXML_ = new System.Threading.Mutex(false, "robotCommandXML");
+            mutexRobotInfoXML_ = new System.Threading.Mutex(false, "robotInfoXML");
+            
+            // -----------------------------------------------
+            // initialize the xml container
+            // -----------------------------------------------
             receiveXML_ = new System.Xml.XmlDocument();
             commandXML_ = new System.Xml.XmlDocument();
 
+            // -----------------------------------------------------------------
+            // try to load the given xml document for commands
+            // -----------------------------------------------------------------
             commandXML_ = getXMLCommandDocument(pathToCommandXMLDocument_);
             if (commandXML_ == null)
             {
@@ -257,6 +284,9 @@ namespace KukaMatlabConnector
                 iError = 2;
             }
 
+            // ---------------------------------------------------------------
+            // only return constructor done if everything is done correctly
+            // ---------------------------------------------------------------
             if (iError == 0)
             {
                 logger_.addMessage("constructor done...");
@@ -272,20 +302,52 @@ namespace KukaMatlabConnector
          *  @retval   none
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public void initializeRobotListenThread()
+        public uint initializeRobotListenThread()
         {
-            setRobotConnectionState(ConnectionState.starting);
+            uint returnal = 0;
 
-            receivedPackagesCount_ = 0;
-            sendPackagesCount_ = 0;
+            // try to figure out if the task is allready running
+            if( kukaListenThread_ == null)
+            {
+                // set connection state of task to starting
+                setRobotConnectionState(ConnectionState.starting);
 
-            delayedPackagesCount_ = 0;
+                // reset all statistic variables
+                receivedPackagesCount_ = 0;
+                sendPackagesCount_ = 0;
+                delayedPackagesCount_ = 0;
 
-            // create thread instance and set the threadpriority to the highest value
-            kukaListenThread_ = new System.Threading.Thread(new System.Threading.ThreadStart(kukaListener), 10000000);
-            kukaListenThread_.Priority = System.Threading.ThreadPriority.Highest;
-            kukaListenThread_.Start();
-        }
+                // create thread instance and set the threadpriority to the highest value
+                kukaListenThread_ = new System.Threading.Thread(new System.Threading.ThreadStart(kukaListener), 10000000);
+                kukaListenThread_.Priority = System.Threading.ThreadPriority.Highest;
+                kukaListenThread_.Start();
+
+                returnal = 0;
+            }
+            else if (kukaListenThread_.IsAlive != true)
+            {
+                // set connection state of task to starting
+                setRobotConnectionState(ConnectionState.starting);
+
+                // reset all statistic variables
+                receivedPackagesCount_ = 0;
+                sendPackagesCount_ = 0;
+                delayedPackagesCount_ = 0;
+
+                // create thread instance and set the threadpriority to the highest value
+                kukaListenThread_ = new System.Threading.Thread(new System.Threading.ThreadStart(kukaListener), 10000000);
+                kukaListenThread_.Priority = System.Threading.ThreadPriority.Highest;
+                kukaListenThread_.Start();
+
+                returnal = 1;
+            }
+            else
+            {
+                returnal = 2;
+            }
+
+            return (returnal);
+         }
 
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         /**
@@ -788,28 +850,12 @@ namespace KukaMatlabConnector
          *  @retval   none
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        private void incrementSynchronAKorrReadPointer()
+        private void incrementSynchronKorrReadPointer()
         {
-            synchronAKorrBufferReadPointer_++;
-            if (synchronAKorrBufferReadPointer_ > (synchronAKorrBufferSize_ - 1))
+            synchronKorrBufferReadPointer_++;
+            if (synchronKorrBufferReadPointer_ > (synchronKorrBufferSize_ - 1))
             {
-                synchronAKorrBufferReadPointer_ = 0;
-            }
-        }
-
-        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        /**
-         *  @brief    increments the synchron RKorr read pointer, if it is larger than the buffer size after incrementation => set to 0
-         * 
-         *  @retval   none
-         */
-        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        private void incrementSynchronRKorrReadPointer()
-        {
-            synchronRKorrBufferReadPointer_++;
-            if (synchronRKorrBufferReadPointer_ > (synchronRKorrBufferSize_ - 1))
-            {
-                synchronRKorrBufferReadPointer_ = 0;
+                synchronKorrBufferReadPointer_ = 0;
             }
         }
 
@@ -821,55 +867,24 @@ namespace KukaMatlabConnector
          *  @retval   none
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        private bool incrementSynchronAKorrWritePointer()
+        private bool incrementSynchronKorrWritePointer()
         {
             uint localWritePointer;
             bool errReturn = false;
 
-            localWritePointer = synchronAKorrBufferWritePointer_;
+            localWritePointer = synchronKorrBufferWritePointer_;
 
-            synchronAKorrBufferWritePointer_++;
-            if (synchronAKorrBufferWritePointer_ > (synchronAKorrBufferSize_ - 1))
+            synchronKorrBufferWritePointer_++;
+            if (synchronKorrBufferWritePointer_ > (synchronKorrBufferSize_ - 1))
             {
-                synchronAKorrBufferWritePointer_ = 0;
+                synchronKorrBufferWritePointer_ = 0;
             }
 
             // writepointer can not be equal to readpointer after incrementation
-            if (synchronAKorrBufferWritePointer_ == synchronAKorrBufferReadPointer_)
+            if (synchronKorrBufferWritePointer_ == synchronKorrBufferReadPointer_)
             {
                 errReturn = true;
-                synchronAKorrBufferWritePointer_ = localWritePointer;
-            }
-
-            return errReturn;
-        }
-
-        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        /**
-         *  @brief    increments the synchron RKorr write pointer, if it is larger than the buffer size after incrementation => set to 0
-         *            if it is equal to the readpointer after incrementation => buffer full back to the old value
-         * 
-         *  @retval   none
-         */
-        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        private bool incrementSynchronRKorrWritePointer()
-        {
-            uint localWritePointer;
-            bool errReturn = false;
-
-            localWritePointer = synchronRKorrBufferWritePointer_;
-
-            synchronRKorrBufferWritePointer_++;
-            if (synchronRKorrBufferWritePointer_ > (synchronRKorrBufferSize_ - 1))
-            {
-                synchronRKorrBufferWritePointer_ = 0;
-            }
-
-            // writepointer can not be equal to readpointer after incrementation
-            if (synchronRKorrBufferWritePointer_ == synchronRKorrBufferReadPointer_)
-            {
-                errReturn = true;
-                synchronRKorrBufferWritePointer_ = localWritePointer;
+                synchronKorrBufferWritePointer_ = localWritePointer;
             }
 
             return errReturn;
@@ -883,53 +898,21 @@ namespace KukaMatlabConnector
          *  @retval   uint ... count of received bytes
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        private uint getSynchronAKorrBufferEntryCount()
+        private uint getSynchronKorrBufferEntryCount()
         {
             uint localEntryCount = 0;
             int localPointerDiff = 0;
 
-            localPointerDiff = Convert.ToInt32(synchronAKorrBufferWritePointer_) - Convert.ToInt32(synchronAKorrBufferReadPointer_);
+            localPointerDiff = Convert.ToInt32(synchronKorrBufferWritePointer_) - Convert.ToInt32(synchronKorrBufferReadPointer_);
 
             // check if the pointer difference is positive or negative
             if (localPointerDiff > 0)
             {
-                localEntryCount = synchronAKorrBufferWritePointer_ - synchronAKorrBufferReadPointer_;
+                localEntryCount = synchronKorrBufferWritePointer_ - synchronKorrBufferReadPointer_;
             }
             else if (localPointerDiff < 0)
             {
-                localEntryCount = (synchronAKorrBufferSize_ - synchronAKorrBufferReadPointer_) + synchronAKorrBufferWritePointer_;
-            }
-            else
-            {
-                localEntryCount = 0;
-            }
-
-            return localEntryCount;
-        }
-
-        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        /**
-         *  @brief    calculates the current count of RKorr commands entered in the buffer => it is the subtraction of write - readpointer and it also checks if
-         *            a buffer wrap happened
-         *            
-         *  @retval   uint ... count of received bytes
-         */
-        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        private uint getSynchronRKorrBufferEntryCount()
-        {
-            uint localEntryCount = 0;
-            int localPointerDiff = 0;
-
-            localPointerDiff = Convert.ToInt32(synchronRKorrBufferWritePointer_) - Convert.ToInt32(synchronRKorrBufferReadPointer_);
-
-            // check if the pointer difference is positive or negative
-            if (localPointerDiff > 0)
-            {
-                localEntryCount = synchronRKorrBufferWritePointer_ - synchronRKorrBufferReadPointer_;
-            }
-            else if (localPointerDiff < 0)
-            {
-                localEntryCount = (synchronRKorrBufferSize_ - synchronRKorrBufferReadPointer_) + synchronRKorrBufferWritePointer_;
+                localEntryCount = (synchronKorrBufferSize_ - synchronKorrBufferReadPointer_) + synchronKorrBufferWritePointer_;
             }
             else
             {
@@ -950,16 +933,16 @@ namespace KukaMatlabConnector
         {
             if (synchronModeAKorrActive_ == true)
             {
-                if (getSynchronAKorrBufferEntryCount() != 0)
+                if (getSynchronKorrBufferEntryCount() != 0)
                 {
-                    modifyAKorrVariable("AKorr1", synchronAKorrBuffer_[synchronAKorrBufferReadPointer_].AKorr1.ToString());
-                    modifyAKorrVariable("AKorr2", synchronAKorrBuffer_[synchronAKorrBufferReadPointer_].AKorr2.ToString());
-                    modifyAKorrVariable("AKorr3", synchronAKorrBuffer_[synchronAKorrBufferReadPointer_].AKorr3.ToString());
-                    modifyAKorrVariable("AKorr4", synchronAKorrBuffer_[synchronAKorrBufferReadPointer_].AKorr4.ToString());
-                    modifyAKorrVariable("AKorr5", synchronAKorrBuffer_[synchronAKorrBufferReadPointer_].AKorr5.ToString());
-                    modifyAKorrVariable("AKorr6", synchronAKorrBuffer_[synchronAKorrBufferReadPointer_].AKorr6.ToString());
+                    modifyAKorrVariable("AKorr1", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr1.ToString());
+                    modifyAKorrVariable("AKorr2", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr2.ToString());
+                    modifyAKorrVariable("AKorr3", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr3.ToString());
+                    modifyAKorrVariable("AKorr4", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr4.ToString());
+                    modifyAKorrVariable("AKorr5", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr5.ToString());
+                    modifyAKorrVariable("AKorr6", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr6.ToString());
 
-                    incrementSynchronAKorrReadPointer();
+                    incrementSynchronKorrReadPointer();
                 }
             }
         }
@@ -975,16 +958,16 @@ namespace KukaMatlabConnector
         {
             if (synchronModeRKorrActive_ == true)
             {
-                if( getSynchronRKorrBufferEntryCount() != 0 )
+                if( getSynchronKorrBufferEntryCount() != 0 )
                 {
-                    modifyRKorrVariable("RKorrX", synchronRKorrBuffer_[synchronRKorrBufferReadPointer_].RKorrX.ToString());
-                    modifyRKorrVariable("RKorrY", synchronRKorrBuffer_[synchronRKorrBufferReadPointer_].RKorrY.ToString());
-                    modifyRKorrVariable("RKorrZ", synchronRKorrBuffer_[synchronRKorrBufferReadPointer_].RKorrZ.ToString());
-                    modifyRKorrVariable("RKorrA", synchronRKorrBuffer_[synchronRKorrBufferReadPointer_].RKorrA.ToString());
-                    modifyRKorrVariable("RKorrB", synchronRKorrBuffer_[synchronRKorrBufferReadPointer_].RKorrB.ToString());
-                    modifyRKorrVariable("RKorrC", synchronRKorrBuffer_[synchronRKorrBufferReadPointer_].RKorrC.ToString());
+                    modifyRKorrVariable("RKorrX", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr1.ToString());
+                    modifyRKorrVariable("RKorrY", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr2.ToString());
+                    modifyRKorrVariable("RKorrZ", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr3.ToString());
+                    modifyRKorrVariable("RKorrA", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr4.ToString());
+                    modifyRKorrVariable("RKorrB", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr5.ToString());
+                    modifyRKorrVariable("RKorrC", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr6.ToString());
 
-                    incrementSynchronRKorrReadPointer();
+                    incrementSynchronKorrReadPointer();
                 }
             }
         }
@@ -1318,9 +1301,9 @@ namespace KukaMatlabConnector
             if (synchronModeAKorrActive_ == true)
             {
                 // safe write pointer
-                localWritePointer = synchronAKorrBufferWritePointer_;
+                localWritePointer = synchronKorrBufferWritePointer_;
                 // increment write pointer
-                if( !incrementSynchronAKorrWritePointer() )
+                if( !incrementSynchronKorrWritePointer() )
                 {
                     localKorrAttributes = command.Split(':');
                     if (localKorrAttributes.Length == 7)
@@ -1329,12 +1312,12 @@ namespace KukaMatlabConnector
 
                         if (localKorrType == "A")
                         {
-                            synchronAKorrBuffer_[localWritePointer].AKorr1 = Convert.ToDouble(localKorrAttributes[1]);
-                            synchronAKorrBuffer_[localWritePointer].AKorr2 = Convert.ToDouble(localKorrAttributes[2]);
-                            synchronAKorrBuffer_[localWritePointer].AKorr3 = Convert.ToDouble(localKorrAttributes[3]);
-                            synchronAKorrBuffer_[localWritePointer].AKorr4 = Convert.ToDouble(localKorrAttributes[4]);
-                            synchronAKorrBuffer_[localWritePointer].AKorr5 = Convert.ToDouble(localKorrAttributes[5]);
-                            synchronAKorrBuffer_[localWritePointer].AKorr6 = Convert.ToDouble(localKorrAttributes[6]);
+                            synchronKorrBuffer_[localWritePointer].Korr1 = Convert.ToDouble(localKorrAttributes[1]);
+                            synchronKorrBuffer_[localWritePointer].Korr2 = Convert.ToDouble(localKorrAttributes[2]);
+                            synchronKorrBuffer_[localWritePointer].Korr3 = Convert.ToDouble(localKorrAttributes[3]);
+                            synchronKorrBuffer_[localWritePointer].Korr4 = Convert.ToDouble(localKorrAttributes[4]);
+                            synchronKorrBuffer_[localWritePointer].Korr5 = Convert.ToDouble(localKorrAttributes[5]);
+                            synchronKorrBuffer_[localWritePointer].Korr6 = Convert.ToDouble(localKorrAttributes[6]);
                         }
                         else
                         {
@@ -1392,9 +1375,9 @@ namespace KukaMatlabConnector
             if (synchronModeRKorrActive_ == true)
             {
                 // safe write pointer
-                localWritePointer = synchronRKorrBufferWritePointer_;
+                localWritePointer = synchronKorrBufferWritePointer_;
                 // increment write pointer
-                if( !incrementSynchronRKorrWritePointer() )
+                if( !incrementSynchronKorrWritePointer() )
                 {
                     localKorrAttributes = command.Split(':');
                     if (localKorrAttributes.Length == 7)
@@ -1403,12 +1386,12 @@ namespace KukaMatlabConnector
 
                         if (localKorrType == "R")
                         {
-                            synchronRKorrBuffer_[localWritePointer].RKorrX = Convert.ToDouble(localKorrAttributes[1]);
-                            synchronRKorrBuffer_[localWritePointer].RKorrY = Convert.ToDouble(localKorrAttributes[2]);
-                            synchronRKorrBuffer_[localWritePointer].RKorrZ = Convert.ToDouble(localKorrAttributes[3]);
-                            synchronRKorrBuffer_[localWritePointer].RKorrA = Convert.ToDouble(localKorrAttributes[4]);
-                            synchronRKorrBuffer_[localWritePointer].RKorrB = Convert.ToDouble(localKorrAttributes[5]);
-                            synchronRKorrBuffer_[localWritePointer].RKorrC = Convert.ToDouble(localKorrAttributes[6]);
+                            synchronKorrBuffer_[localWritePointer].Korr1 = Convert.ToDouble(localKorrAttributes[1]);
+                            synchronKorrBuffer_[localWritePointer].Korr2 = Convert.ToDouble(localKorrAttributes[2]);
+                            synchronKorrBuffer_[localWritePointer].Korr3 = Convert.ToDouble(localKorrAttributes[3]);
+                            synchronKorrBuffer_[localWritePointer].Korr4 = Convert.ToDouble(localKorrAttributes[4]);
+                            synchronKorrBuffer_[localWritePointer].Korr5 = Convert.ToDouble(localKorrAttributes[5]);
+                            synchronKorrBuffer_[localWritePointer].Korr6 = Convert.ToDouble(localKorrAttributes[6]);
                         }
                         else
                         {
@@ -1439,7 +1422,7 @@ namespace KukaMatlabConnector
          *  @retval   String ... debug string to see what times it took for communication
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public String getDelayedCommInfo()
+        public String getDebugCommInfo()
         {
             String returnal;
 
@@ -1654,7 +1637,14 @@ namespace KukaMatlabConnector
 
             mutexRobotCommandXML_.WaitOne();
 
-            returnString = commandXML_.InnerXml;
+            if (commandXML_ != null)
+            {
+                returnString = commandXML_.InnerXml;
+            }
+            else
+            {
+                returnString = "";
+            }
 
             mutexRobotCommandXML_.ReleaseMutex();
 
@@ -1692,7 +1682,14 @@ namespace KukaMatlabConnector
 
             mutexRobotInfoXML_.WaitOne();
 
-            returnString = receiveXML_.InnerXml;
+            if (receiveXML_ != null)
+            {
+                returnString = receiveXML_.InnerXml;
+            }
+            else
+            {
+                returnString = "";
+            }
 
             mutexRobotInfoXML_.ReleaseMutex();
 
@@ -1706,11 +1703,15 @@ namespace KukaMatlabConnector
          *  @retval   none
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public void stopRobotConnChannel()
+        public uint stopRobotConnChannel()
         {
+            uint returnal = 0;
+
             if (getRobotConnectionState() == ConnectionState.running)
             {
                 setRobotConnectionState(ConnectionState.closeRequest);
+
+                returnal = 0;
             }
             else
             {
@@ -1719,8 +1720,13 @@ namespace KukaMatlabConnector
                     setRobotConnectionState(ConnectionState.init);
                     serverRobotComListener_.Close();
                 }
-                catch { }
+                catch 
+                {
+                    returnal = 1;
+                }
             }
+
+            return (returnal);
         }
 
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */

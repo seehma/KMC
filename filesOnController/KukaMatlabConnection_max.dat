@@ -12,10 +12,11 @@ DECL INT SUCCESS
 ;Make here your modifications
 
 DECL RSIERR err
-INT hEthernet
-INT hMap2Digout1,hMap2Digout2,hMap2Digout3,hAxis,hPath
+INT hEthernet,hMap
+INT hDin,hDout1,hDout2,hDout3,hAxis,hPath,hMapDiO
 INT UNIT_RSI
-INT hAnaIn1,hAnaIn2,hAnaIn3,hAnaIn4,hAnaIn5,hAnaIn6
+INT hAnaIn1,hAnaIn2,hAnaIn3,hAnaIn4,hAnaIn5,hAnaIn6,hAnaIn7
+INT hSource
 
 ;ENDFOLD (USER EXT)
 ;ENDFOLD (EXTERNAL DECLERATIONS)
