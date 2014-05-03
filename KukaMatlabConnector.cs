@@ -203,7 +203,7 @@ namespace KukaMatlabConnector
             }
             catch
             {
-                logger_.addMessage("please give a correct IP-address...");
+                makeLoggingEntry("please give a correct IP-address...");
                 iError = 1;
             }
 
@@ -280,7 +280,7 @@ namespace KukaMatlabConnector
             commandXML_ = getXMLCommandDocument(pathToCommandXMLDocument_);
             if (commandXML_ == null)
             {
-                logger_.addMessage("could not find command XML-file...");
+                makeLoggingEntry("could not find command XML-file...");
                 iError = 2;
             }
 
@@ -289,7 +289,7 @@ namespace KukaMatlabConnector
             // ---------------------------------------------------------------
             if (iError == 0)
             {
-                logger_.addMessage("constructor done...");
+                makeLoggingEntry("constructor done...");
             }
         }
 
@@ -413,7 +413,7 @@ namespace KukaMatlabConnector
                 serverRobotComListener_.Listen(1);
 
                 // program is suspended while waiting for an incoming connection, bind the first request
-                logger_.addMessage("listening for RobotCom on ip:" + robotListenIPAddress_.ToString() + " port:" + robotCommunicationPort_.ToString() + ", wait for connection...");
+                makeLoggingEntry("listening for RobotCom on ip:" + robotListenIPAddress_.ToString() + " port:" + robotCommunicationPort_.ToString() + ", wait for connection...");
                 localComHandler = serverRobotComListener_.Accept();
 
                 localComHandler.NoDelay = true;
@@ -424,16 +424,16 @@ namespace KukaMatlabConnector
                 if ((localComHandler != null) && (getRobotConnectionState() == ConnectionState.listening))
                 {
                     setRobotConnectionState(ConnectionState.connecting);
-                    logger_.addMessage("connection established! starting communication with RobotCom...");
+                    makeLoggingEntry("connection established! starting communication with RobotCom...");
                 }
                 else
                 {
-                    logger_.addMessage("connection canceled! good bye...");
+                    makeLoggingEntry("connection canceled! good bye...");
                 }
             }
             catch
             {
-                logger_.addMessage("cant open port, please give it another try...");
+                makeLoggingEntry("cant open port, please give it another try...");
                 serverRobotComListener_.Close();
                 localComHandler = null;
             }
@@ -472,17 +472,17 @@ namespace KukaMatlabConnector
                     }
                     else
                     {
-                        logger_.addMessage("could not open the server-robot client connection => check network connection!");
+                        makeLoggingEntry("could not open the server-robot client connection => check network connection!");
                     }
                 }
             }
             else
             {
                 // otherwise throw an error
-                logger_.addMessage("no ip host entry found to connect => check network connection!");
+                makeLoggingEntry("no ip host entry found to connect => check network connection!");
             }
 
-            logger_.addMessage("connection closed, server closed, see you next time...");
+            makeLoggingEntry("connection closed, server closed, see you next time...");
 
             setRobotConnectionState(ConnectionState.init);
         }
@@ -541,7 +541,7 @@ namespace KukaMatlabConnector
                         bytesReceived = comHandler.Receive(localIncomingDataByteBuffer);
                         if (bytesReceived == 0)
                         {
-                            logger_.addMessage("client closed connection (bytesReceived=0)");
+                            makeLoggingEntry("client closed connection (bytesReceived=0)");
                             setRobotConnectionState(ConnectionState.closing);
                             break; // client closed socket
                         }
@@ -564,7 +564,7 @@ namespace KukaMatlabConnector
                 }
                 catch
                 {
-                    logger_.addMessage("connection closed from remote host...\n\r");
+                    makeLoggingEntry("connection closed from remote host...\n\r");
                     setRobotConnectionState(ConnectionState.closing);
                     break;
                 }
@@ -620,7 +620,7 @@ namespace KukaMatlabConnector
                         }
                         catch
                         {
-                            logger_.addMessage("could not send XML string");
+                            makeLoggingEntry("could not send XML string");
                         }
                     }
                 }
@@ -682,7 +682,7 @@ namespace KukaMatlabConnector
             }
             else
             {
-                logger_.addMessage("no robot specific nodes found!");
+                makeLoggingEntry("no robot specific nodes found!");
                 robStringFound = false;
             }
 
@@ -1063,13 +1063,13 @@ namespace KukaMatlabConnector
                 }
                 else
                 {
-                    logger_.addMessage("illegal commands received...");
+                    makeLoggingEntry("illegal commands received...");
                     uiError = 1;
                 }
             }
             else
             {
-                logger_.addMessage("illergal commands received...."); 
+                makeLoggingEntry("illergal commands received...."); 
                 uiError = 1;
             }  
 
@@ -1108,13 +1108,13 @@ namespace KukaMatlabConnector
                 }
                 else
                 {
-                    logger_.addMessage("illegal commands received...");
+                    makeLoggingEntry("illegal commands received...");
                     uiError = 1;
                 }
             }
             else
             {
-                logger_.addMessage("illergal commands received....");
+                makeLoggingEntry("illergal commands received....");
                 uiError = 2;
             }    
 
@@ -1321,20 +1321,20 @@ namespace KukaMatlabConnector
                         }
                         else
                         {
-                            logger_.addMessage("illegal command received...");
+                            makeLoggingEntry("illegal command received...");
                             errReturn = true;
                         }
                     }
                     else
                     {
-                        logger_.addMessage("illegal commands received...");
+                        makeLoggingEntry("illegal commands received...");
                         errReturn = true;
                     }
                 }
             }
             else
             {
-                logger_.addMessage("start synchron AKorr mode first...");
+                makeLoggingEntry("start synchron AKorr mode first...");
                 errReturn = true;
             }
 
@@ -1395,20 +1395,20 @@ namespace KukaMatlabConnector
                         }
                         else
                         {
-                            logger_.addMessage("illegal command received...");
+                            makeLoggingEntry("illegal command received...");
                             errReturn = true;
                         }
                     }
                     else
                     {
-                        logger_.addMessage("illegal commands received...");
+                        makeLoggingEntry("illegal commands received...");
                         errReturn = true;
                     }
                 }
             }
             else
             {
-                logger_.addMessage("start synchron RKorr mode first...");
+                makeLoggingEntry("start synchron RKorr mode first...");
                 errReturn = true;
             }
 
@@ -1854,6 +1854,19 @@ namespace KukaMatlabConnector
             localBool = nextCycleStarted_;
 
             return localBool;
+        }
+
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    if the wrapper waits for the next robot info, the nextCycleStarte_ boolean is set => signals the connected application that 
+         *            the data for the next cycle can be modified
+         * 
+         *  @retval   bool ... true if the wrapper waits for the next robot info data
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        private void makeLoggingEntry(String message)
+        {
+            logger_.addMessage(message);
         }
     }
 }
