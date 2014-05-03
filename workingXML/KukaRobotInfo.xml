@@ -1,0 +1,60 @@
+<ROOT>
+   <CONFIG>
+      <IP_NUMBER>192.0.1.2</IP_NUMBER>    <!-- IP Number of the socket !-->
+      <PORT>6008</PORT>                   <!-- Port Number of the socket !-->
+      <PROTOCOL>TCP</PROTOCOL>            <!-- TCP or UDP, Protocol of the socket !-->
+      <SENTYPE>KMC</SENTYPE>
+      <PROTCOLLENGTH>Off</PROTCOLLENGTH>  <!-- On or Off, Send the length of data in bytes before XML data begins!-->
+      <ONLYSEND>FALSE</ONLYSEND>          <!-- TRUE means the client don't expect a answer. Do not send anything to robot!-->
+   </CONFIG>
+   <!-- RSI Data: TYPE=  "BOOL", "STRING", "LONG", "DOUBLE" !-->
+   <!-- INDX= "INTERNAL" switch on internal read values. Needed by DEF_...!-->
+   <!-- INDX= "nmb" Input/Output index of RSI-Object / Maximum of RSI Channels: 64 !-->
+   <!-- UNIT: The same like RSI Units, insert decimal or hex (0x......) values. !-->
+   <!-- HOLDON="1", set this output index of RSI Object to the last value  !-->   
+   <!-- DEF_Delay count the late packages and send it back to server  !-->
+   <!-- DEF_Tech: .C = advance .T = main run / .C1 advance set function generator 1 !-->
+   
+   <SEND>
+      <ELEMENTS>
+         <ELEMENT TAG="DEF_RIst" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="DEF_RSol" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="DEF_AIPos" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="DEF_ASPos" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="DEF_MACur" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="DEF_Delay" TYPE="LONG" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="DEF_Tech.C1" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="DiL" TYPE="LONG" INDX="1" UNIT="0" />
+         <ELEMENT TAG="Digout.o1" TYPE="BOOL" INDX="2" UNIT="0" />
+         <ELEMENT TAG="Digout.o2" TYPE="BOOL" INDX="3" UNIT="0" />
+         <ELEMENT TAG="Digout.o3" TYPE="BOOL" INDX="4" UNIT="0" />
+         <ELEMENT TAG="ST_Source" TYPE="DOUBLE" INDX="5" UNIT="3601" />
+         <ELEMENT TAG="FTC.Fx" TYPE="DOUBLE" INDX="6" UNIT="0" />
+         <ELEMENT TAG="FTC.Fy" TYPE="DOUBLE" INDX="7" UNIT="0" />
+         <ELEMENT TAG="FTC.Fz" TYPE="DOUBLE" INDX="8" UNIT="0" />
+         <ELEMENT TAG="FTC.Tx" TYPE="DOUBLE" INDX="9" UNIT="0" />
+         <ELEMENT TAG="FTC.Ty" TYPE="DOUBLE" INDX="10" UNIT="0" />
+         <ELEMENT TAG="FTC.Tz" TYPE="DOUBLE" INDX="11" UNIT="0" />
+         <ELEMENT TAG="FTC.State" TYPE="LONG" INDX="12" UNIT="0" />
+      </ELEMENTS>
+   </SEND>
+   <RECEIVE>
+      <ELEMENTS>
+         <ELEMENT TAG="DEF_EStr" TYPE="STRING" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="RKorr.X" TYPE="DOUBLE" INDX="1" UNIT="1" HOLDON="1" />
+         <ELEMENT TAG="RKorr.Y" TYPE="DOUBLE" INDX="2" UNIT="1" HOLDON="1" />
+         <ELEMENT TAG="RKorr.Z" TYPE="DOUBLE" INDX="3" UNIT="1" HOLDON="1" />
+         <ELEMENT TAG="RKorr.A" TYPE="DOUBLE" INDX="4" UNIT="0" HOLDON="1" />
+         <ELEMENT TAG="RKorr.B" TYPE="DOUBLE" INDX="5" UNIT="0" HOLDON="1" />
+         <ELEMENT TAG="RKorr.C" TYPE="DOUBLE" INDX="6" UNIT="0" HOLDON="1" />
+         <ELEMENT TAG="AKorr.A1" TYPE="DOUBLE" INDX="7" UNIT="0" HOLDON="0" />
+         <ELEMENT TAG="AKorr.A2" TYPE="DOUBLE" INDX="8" UNIT="0" HOLDON="0" />
+         <ELEMENT TAG="AKorr.A3" TYPE="DOUBLE" INDX="9" UNIT="0" HOLDON="0" />
+         <ELEMENT TAG="AKorr.A4" TYPE="DOUBLE" INDX="10" UNIT="0" HOLDON="0" />
+         <ELEMENT TAG="AKorr.A5" TYPE="DOUBLE" INDX="11" UNIT="0" HOLDON="0" />
+         <ELEMENT TAG="AKorr.A6" TYPE="DOUBLE" INDX="12" UNIT="0" HOLDON="0" />
+         <ELEMENT TAG="DEF_Tech.T2" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="DiO" TYPE="LONG" INDX="13" UNIT="0" HOLDON="1" />
+      </ELEMENTS>
+   </RECEIVE>
+</ROOT>
