@@ -68,16 +68,17 @@
             this.groupBoxOther = new System.Windows.Forms.GroupBox();
             this.loggingEntrys = new System.Windows.Forms.ListBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label_debugString = new System.Windows.Forms.Label();
+            this.label_debugStringDescr = new System.Windows.Forms.Label();
+            this.label_cycleTime = new System.Windows.Forms.Label();
+            this.label_cycleTimeDescr = new System.Windows.Forms.Label();
+            this.label_connectionState = new System.Windows.Forms.Label();
+            this.label_connectionStateDescr = new System.Windows.Forms.Label();
             this.label_packagesSent = new System.Windows.Forms.Label();
             this.label_packagesSentDescr = new System.Windows.Forms.Label();
             this.label_packagesReceived = new System.Windows.Forms.Label();
             this.label_packagesReceivedDescr = new System.Windows.Forms.Label();
-            this.label_connectionStateDescr = new System.Windows.Forms.Label();
-            this.label_connectionState = new System.Windows.Forms.Label();
-            this.label_cycleTimeDescr = new System.Windows.Forms.Label();
-            this.label_cycleTime = new System.Windows.Forms.Label();
-            this.label_debugStringDescr = new System.Windows.Forms.Label();
-            this.label_debugString = new System.Windows.Forms.Label();
+            this.btnResetMovement = new System.Windows.Forms.Button();
             this.groupBoxConnectionStatus.SuspendLayout();
             this.groupBoxModifyCommandString.SuspendLayout();
             this.groupBoxOther.SuspendLayout();
@@ -87,7 +88,7 @@
             // label_StepSize
             // 
             this.label_StepSize.AutoSize = true;
-            this.label_StepSize.Location = new System.Drawing.Point(59, 19);
+            this.label_StepSize.Location = new System.Drawing.Point(7, 69);
             this.label_StepSize.Name = "label_StepSize";
             this.label_StepSize.Size = new System.Drawing.Size(55, 13);
             this.label_StepSize.TabIndex = 44;
@@ -95,9 +96,9 @@
             // 
             // textBoxStepSize
             // 
-            this.textBoxStepSize.Location = new System.Drawing.Point(60, 36);
+            this.textBoxStepSize.Location = new System.Drawing.Point(61, 66);
             this.textBoxStepSize.Name = "textBoxStepSize";
-            this.textBoxStepSize.Size = new System.Drawing.Size(68, 20);
+            this.textBoxStepSize.Size = new System.Drawing.Size(51, 20);
             this.textBoxStepSize.TabIndex = 43;
             // 
             // radioButtonRKorr
@@ -110,6 +111,7 @@
             this.radioButtonRKorr.TabStop = true;
             this.radioButtonRKorr.Text = "RKorr";
             this.radioButtonRKorr.UseVisualStyleBackColor = true;
+            this.radioButtonRKorr.CheckedChanged += new System.EventHandler(this.radioButtonRKorr_CheckedChanged);
             // 
             // radioButtonAKorr
             // 
@@ -121,6 +123,7 @@
             this.radioButtonAKorr.TabStop = true;
             this.radioButtonAKorr.Text = "AKorr";
             this.radioButtonAKorr.UseVisualStyleBackColor = true;
+            this.radioButtonAKorr.CheckedChanged += new System.EventHandler(this.radioButtonAKorr_CheckedChanged);
             // 
             // appButtonDecrementKorr6
             // 
@@ -325,18 +328,18 @@
             // 
             // textbox_robotCommandData
             // 
-            this.textbox_robotCommandData.Location = new System.Drawing.Point(481, 101);
+            this.textbox_robotCommandData.Location = new System.Drawing.Point(481, 106);
             this.textbox_robotCommandData.Multiline = true;
             this.textbox_robotCommandData.Name = "textbox_robotCommandData";
-            this.textbox_robotCommandData.Size = new System.Drawing.Size(479, 299);
+            this.textbox_robotCommandData.Size = new System.Drawing.Size(479, 319);
             this.textbox_robotCommandData.TabIndex = 33;
             // 
             // textbox_robotInfoData
             // 
-            this.textbox_robotInfoData.Location = new System.Drawing.Point(9, 101);
+            this.textbox_robotInfoData.Location = new System.Drawing.Point(9, 106);
             this.textbox_robotInfoData.Multiline = true;
             this.textbox_robotInfoData.Name = "textbox_robotInfoData";
-            this.textbox_robotInfoData.Size = new System.Drawing.Size(466, 299);
+            this.textbox_robotInfoData.Size = new System.Drawing.Size(466, 319);
             this.textbox_robotInfoData.TabIndex = 32;
             // 
             // label_Korr_1
@@ -389,7 +392,7 @@
             // 
             // appButtonResetStatistics
             // 
-            this.appButtonResetStatistics.Location = new System.Drawing.Point(7, 18);
+            this.appButtonResetStatistics.Location = new System.Drawing.Point(8, 18);
             this.appButtonResetStatistics.Name = "appButtonResetStatistics";
             this.appButtonResetStatistics.Size = new System.Drawing.Size(120, 27);
             this.appButtonResetStatistics.TabIndex = 17;
@@ -458,26 +461,27 @@
             this.groupBoxModifyCommandString.Controls.Add(this.appButtonIncrementKorr1);
             this.groupBoxModifyCommandString.Location = new System.Drawing.Point(543, 5);
             this.groupBoxModifyCommandString.Name = "groupBoxModifyCommandString";
-            this.groupBoxModifyCommandString.Size = new System.Drawing.Size(416, 92);
+            this.groupBoxModifyCommandString.Size = new System.Drawing.Size(416, 95);
             this.groupBoxModifyCommandString.TabIndex = 37;
             this.groupBoxModifyCommandString.TabStop = false;
             this.groupBoxModifyCommandString.Text = "Modify Command String";
             // 
             // groupBoxOther
             // 
+            this.groupBoxOther.Controls.Add(this.btnResetMovement);
             this.groupBoxOther.Controls.Add(this.appButtonResetStatistics);
             this.groupBoxOther.Location = new System.Drawing.Point(400, 5);
             this.groupBoxOther.Name = "groupBoxOther";
-            this.groupBoxOther.Size = new System.Drawing.Size(137, 56);
+            this.groupBoxOther.Size = new System.Drawing.Size(137, 95);
             this.groupBoxOther.TabIndex = 36;
             this.groupBoxOther.TabStop = false;
             // 
             // loggingEntrys
             // 
             this.loggingEntrys.FormattingEnabled = true;
-            this.loggingEntrys.Location = new System.Drawing.Point(10, 405);
+            this.loggingEntrys.Location = new System.Drawing.Point(10, 431);
             this.loggingEntrys.Name = "loggingEntrys";
-            this.loggingEntrys.Size = new System.Drawing.Size(951, 199);
+            this.loggingEntrys.Size = new System.Drawing.Size(951, 173);
             this.loggingEntrys.TabIndex = 31;
             // 
             // groupBox1
@@ -497,6 +501,61 @@
             this.groupBox1.Size = new System.Drawing.Size(701, 72);
             this.groupBox1.TabIndex = 37;
             this.groupBox1.TabStop = false;
+            // 
+            // label_debugString
+            // 
+            this.label_debugString.AutoSize = true;
+            this.label_debugString.Location = new System.Drawing.Point(384, 47);
+            this.label_debugString.Name = "label_debugString";
+            this.label_debugString.Size = new System.Drawing.Size(55, 13);
+            this.label_debugString.TabIndex = 47;
+            this.label_debugString.Text = "debugInfo";
+            // 
+            // label_debugStringDescr
+            // 
+            this.label_debugStringDescr.AutoSize = true;
+            this.label_debugStringDescr.Location = new System.Drawing.Point(300, 47);
+            this.label_debugStringDescr.Name = "label_debugStringDescr";
+            this.label_debugStringDescr.Size = new System.Drawing.Size(69, 13);
+            this.label_debugStringDescr.TabIndex = 46;
+            this.label_debugStringDescr.Text = "Debug String";
+            // 
+            // label_cycleTime
+            // 
+            this.label_cycleTime.AutoSize = true;
+            this.label_cycleTime.Location = new System.Drawing.Point(384, 16);
+            this.label_cycleTime.Name = "label_cycleTime";
+            this.label_cycleTime.Size = new System.Drawing.Size(37, 13);
+            this.label_cycleTime.TabIndex = 45;
+            this.label_cycleTime.Text = "12341";
+            // 
+            // label_cycleTimeDescr
+            // 
+            this.label_cycleTimeDescr.AutoSize = true;
+            this.label_cycleTimeDescr.Location = new System.Drawing.Point(300, 16);
+            this.label_cycleTimeDescr.Name = "label_cycleTimeDescr";
+            this.label_cycleTimeDescr.Size = new System.Drawing.Size(78, 13);
+            this.label_cycleTimeDescr.TabIndex = 44;
+            this.label_cycleTimeDescr.Text = "Akt Cycle Time";
+            // 
+            // label_connectionState
+            // 
+            this.label_connectionState.AutoSize = true;
+            this.label_connectionState.Location = new System.Drawing.Point(116, 47);
+            this.label_connectionState.Name = "label_connectionState";
+            this.label_connectionState.Size = new System.Drawing.Size(20, 13);
+            this.label_connectionState.TabIndex = 43;
+            this.label_connectionState.Text = "init";
+            // 
+            // label_connectionStateDescr
+            // 
+            this.label_connectionStateDescr.AutoSize = true;
+            this.label_connectionStateDescr.Location = new System.Drawing.Point(6, 47);
+            this.label_connectionStateDescr.Name = "label_connectionStateDescr";
+            this.label_connectionStateDescr.Size = new System.Drawing.Size(89, 13);
+            this.label_connectionStateDescr.TabIndex = 42;
+            this.label_connectionStateDescr.Tag = "";
+            this.label_connectionStateDescr.Text = "Connection State";
             // 
             // label_packagesSent
             // 
@@ -534,60 +593,15 @@
             this.label_packagesReceivedDescr.TabIndex = 38;
             this.label_packagesReceivedDescr.Text = "Packages Received";
             // 
-            // label_connectionStateDescr
+            // btnResetMovement
             // 
-            this.label_connectionStateDescr.AutoSize = true;
-            this.label_connectionStateDescr.Location = new System.Drawing.Point(6, 47);
-            this.label_connectionStateDescr.Name = "label_connectionStateDescr";
-            this.label_connectionStateDescr.Size = new System.Drawing.Size(89, 13);
-            this.label_connectionStateDescr.TabIndex = 42;
-            this.label_connectionStateDescr.Tag = "";
-            this.label_connectionStateDescr.Text = "Connection State";
-            // 
-            // label_connectionState
-            // 
-            this.label_connectionState.AutoSize = true;
-            this.label_connectionState.Location = new System.Drawing.Point(116, 47);
-            this.label_connectionState.Name = "label_connectionState";
-            this.label_connectionState.Size = new System.Drawing.Size(20, 13);
-            this.label_connectionState.TabIndex = 43;
-            this.label_connectionState.Text = "init";
-            // 
-            // label_cycleTimeDescr
-            // 
-            this.label_cycleTimeDescr.AutoSize = true;
-            this.label_cycleTimeDescr.Location = new System.Drawing.Point(300, 16);
-            this.label_cycleTimeDescr.Name = "label_cycleTimeDescr";
-            this.label_cycleTimeDescr.Size = new System.Drawing.Size(78, 13);
-            this.label_cycleTimeDescr.TabIndex = 44;
-            this.label_cycleTimeDescr.Text = "Akt Cycle Time";
-            // 
-            // label_cycleTime
-            // 
-            this.label_cycleTime.AutoSize = true;
-            this.label_cycleTime.Location = new System.Drawing.Point(384, 16);
-            this.label_cycleTime.Name = "label_cycleTime";
-            this.label_cycleTime.Size = new System.Drawing.Size(37, 13);
-            this.label_cycleTime.TabIndex = 45;
-            this.label_cycleTime.Text = "12341";
-            // 
-            // label_debugStringDescr
-            // 
-            this.label_debugStringDescr.AutoSize = true;
-            this.label_debugStringDescr.Location = new System.Drawing.Point(300, 47);
-            this.label_debugStringDescr.Name = "label_debugStringDescr";
-            this.label_debugStringDescr.Size = new System.Drawing.Size(69, 13);
-            this.label_debugStringDescr.TabIndex = 46;
-            this.label_debugStringDescr.Text = "Debug String";
-            // 
-            // label_debugString
-            // 
-            this.label_debugString.AutoSize = true;
-            this.label_debugString.Location = new System.Drawing.Point(384, 47);
-            this.label_debugString.Name = "label_debugString";
-            this.label_debugString.Size = new System.Drawing.Size(55, 13);
-            this.label_debugString.TabIndex = 47;
-            this.label_debugString.Text = "debugInfo";
+            this.btnResetMovement.Location = new System.Drawing.Point(8, 51);
+            this.btnResetMovement.Name = "btnResetMovement";
+            this.btnResetMovement.Size = new System.Drawing.Size(120, 26);
+            this.btnResetMovement.TabIndex = 18;
+            this.btnResetMovement.Text = "Reset Commands";
+            this.btnResetMovement.UseVisualStyleBackColor = true;
+            this.btnResetMovement.Click += new System.EventHandler(this.btnResetMovement_Click);
             // 
             // ConnectorClient
             // 
@@ -668,6 +682,7 @@
         private System.Windows.Forms.Label label_cycleTime;
         private System.Windows.Forms.Label label_debugString;
         private System.Windows.Forms.Label label_debugStringDescr;
+        private System.Windows.Forms.Button btnResetMovement;
     }
 }
 

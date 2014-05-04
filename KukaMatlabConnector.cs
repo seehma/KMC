@@ -1164,7 +1164,8 @@ namespace KukaMatlabConnector
                         // search for the right tag
                         localRKorrNodeList = commandXML_.GetElementsByTagName("RKorr");
 
-                        if (localRKorrNodeList != null)
+                        // check if the search was successfully otherwise do nothing and return errorflag
+                        if ((localRKorrNodeList != null) && (localRKorrNodeList.Count > 0))
                         {
                             // change the attribute to the desired value
                             switch (variable)
@@ -1176,18 +1177,22 @@ namespace KukaMatlabConnector
                                 case "RKorrB": localRKorrNodeList[0].Attributes["B"].Value = Convert.ToString(valueToSend, System.Globalization.CultureInfo.InvariantCulture); break;  //B
                                 case "RKorrC": localRKorrNodeList[0].Attributes["C"].Value = Convert.ToString(valueToSend, System.Globalization.CultureInfo.InvariantCulture); break;  //C
                             }
-                        }
 
-                        setCommandString(commandXML_.InnerXml);
+                            setCommandString(commandXML_.InnerXml);
+                        }
+                        else
+                        {
+                            uiError = 1;
+                        }
                     }
                     catch
                     {
-                        uiError = 1;
+                        uiError = 2;
                     }
                 }
                 else
                 {
-                    uiError = 2;
+                    uiError = 3;
                 }
             }
 
@@ -1237,7 +1242,8 @@ namespace KukaMatlabConnector
                         // search for the right tag
                         localAKorrNodeList = commandXML_.GetElementsByTagName("AKorr");
 
-                        if (localAKorrNodeList != null)
+                        // check if the search was successfully otherwise do nothing and return errorflag
+                        if ((localAKorrNodeList != null) && (localAKorrNodeList.Count > 0))
                         {
                             // change the attribute to the desired value
                             switch (variable)
@@ -1249,18 +1255,22 @@ namespace KukaMatlabConnector
                                 case "AKorr5": localAKorrNodeList[0].Attributes["A5"].Value = Convert.ToString(valueToSend, System.Globalization.CultureInfo.InvariantCulture); break;  //A5
                                 case "AKorr6": localAKorrNodeList[0].Attributes["A6"].Value = Convert.ToString(valueToSend, System.Globalization.CultureInfo.InvariantCulture); break;  //A6
                             }
-                        }
 
-                        setCommandString(commandXML_.InnerXml);
+                            setCommandString(commandXML_.InnerXml);
+                        }
+                        else
+                        {
+                            uiError = 1;
+                        }
                     }
                     catch
                     {
-                        uiError = 1;
+                        uiError = 2;
                     }
                 }
                 else
                 {
-                    uiError = 2;
+                    uiError = 3;
                 }
             }
 
@@ -1866,7 +1876,11 @@ namespace KukaMatlabConnector
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         private void makeLoggingEntry(String message)
         {
-            logger_.addMessage(message);
+            // check if logger instance was initialized
+            if (logger_ != null)
+            {
+                logger_.addMessage(message);
+            }
         }
     }
 }

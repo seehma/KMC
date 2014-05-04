@@ -18,6 +18,8 @@ namespace ConnectorClient
 
         System.Threading.Thread loggerListenThread_;  // creating thread instance for reading logmessages
 
+        bool doDisplayRefreshLoop_;
+
         uint korrChooser_; // choose which correction you want 1 ... RKorr, 2 ... AKorr, 3 ... EKorr
 
         public ConnectorClient()
@@ -37,8 +39,8 @@ namespace ConnectorClient
             loggerListenThread_.Start();
 
             // set the garbage collector to "do not influence" mode
-            //System.GC.Collect();
-            //System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;
+            System.GC.Collect();
+            System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.LowLatency;
             //System.GC.SuppressFinalize(connector_);
         }
 
@@ -92,12 +94,14 @@ namespace ConnectorClient
             TextLogger.TextLogger.loggingBufferEntry localEntry;
             String localString;
 
+            doDisplayRefreshLoop_ = true;
+
             uint pointerDiff = 0;
 
             // -----------------------------------------------------------------------------------------------------------------
             // run till programm gets closed
             // -----------------------------------------------------------------------------------------------------------------
-            while (true)
+            while (doDisplayRefreshLoop_)
             {
                 if (connector_ != null)
                 {
@@ -126,6 +130,11 @@ namespace ConnectorClient
                     System.Threading.Thread.Sleep(50);
                 }
             }
+        }
+
+        public void stopDisplayRefreshing()
+        {
+            doDisplayRefreshLoop_ = false;
         }
 
         private void radioButtonAKorr_CheckedChanged(object sender, EventArgs e)
@@ -164,6 +173,12 @@ namespace ConnectorClient
             label_actKorr4.Text = Convert.ToString(RKorr_A_);
             label_actKorr5.Text = Convert.ToString(RKorr_B_);
             label_actKorr6.Text = Convert.ToString(RKorr_C_);
+        }
+
+        private void btnResetMovement_Click(object sender, EventArgs e)
+        {
+            connector_.modifyAKorr("A:0:0:0:0:0:0");
+            connector_.modifyRKorr("R:0:0:0:0:0:0");
         }
 
         private double getCorrectionValue()
@@ -206,6 +221,32 @@ namespace ConnectorClient
 
         private void appButtonClose_Click(object sender, EventArgs e)
         {
+            System.Diagnostics.Stopwatch stopWatch = new System.Diagnostics.Stopwatch();
+
+            stopWatch.Reset();
+            stopWatch.Start();
+
+            // stop connection
+            connector_.stopRobotConnChannel();
+
+            // stop Display refreshing 
+            stopDisplayRefreshing();
+
+            // wait till connection is closed!
+            while ((connector_.getRobotConnectionState() != KukaMatlabConnector.ConnectorObject.ConnectionState.init) &&
+                   (loggerListenThread_.ThreadState != System.Threading.ThreadState.Stopped))
+            {
+
+                System.Threading.Thread.Sleep(50);
+
+                // if closing needs longer than half a second => break and force closing
+                if( stopWatch.ElapsedMilliseconds > 500 )
+                {
+                    break;
+                }
+            }
+
+            // close application
             System.Windows.Forms.Application.Exit();
         }
 
