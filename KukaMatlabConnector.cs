@@ -574,12 +574,6 @@ namespace KukaMatlabConnector
                 stopWatchSend_.Reset();
                 stopWatchSend_.Start();
 
-                // -------------------------------------------------------------------------------------
-                // signals the connector that the sending operation just started => 
-                // the external system has to wait until this variable goes again to true
-                // -------------------------------------------------------------------------------------
-                nextCycleStarted_ = false;
-
                 // --------------------------------------------------------------
                 // only try to load the xml stuff when there is data available
                 // --------------------------------------------------------------
@@ -1060,6 +1054,12 @@ namespace KukaMatlabConnector
                     modifyRKorrVariable("RKorrA", localKorrAttributes[4]);
                     modifyRKorrVariable("RKorrB", localKorrAttributes[5]);
                     modifyRKorrVariable("RKorrC", localKorrAttributes[6]);
+
+                    // -------------------------------------------------------------------------------------
+                    // signals the connector that the sending operation just started => 
+                    // the external system has to wait until this variable goes again to true
+                    // -------------------------------------------------------------------------------------
+                    nextCycleStarted_ = false;
                 }
                 else
                 {
@@ -1105,6 +1105,12 @@ namespace KukaMatlabConnector
                     modifyAKorrVariable("AKorr4", localKorrAttributes[4]);
                     modifyAKorrVariable("AKorr5", localKorrAttributes[5]);
                     modifyAKorrVariable("AKorr6", localKorrAttributes[6]);
+
+                    // -------------------------------------------------------------------------------------
+                    // signals the connector that the sending operation just started => 
+                    // the external system has to wait until this variable goes again to true
+                    // -------------------------------------------------------------------------------------
+                    nextCycleStarted_ = false;
                 }
                 else
                 {
@@ -1179,6 +1185,12 @@ namespace KukaMatlabConnector
                             }
 
                             setCommandString(commandXML_.InnerXml);
+
+                            // -------------------------------------------------------------------------------------
+                            // signals the connector that the sending operation just started => 
+                            // the external system has to wait until this variable goes again to true
+                            // -------------------------------------------------------------------------------------
+                            nextCycleStarted_ = false;
                         }
                         else
                         {
@@ -1257,6 +1269,12 @@ namespace KukaMatlabConnector
                             }
 
                             setCommandString(commandXML_.InnerXml);
+
+                            // -------------------------------------------------------------------------------------
+                            // signals the connector that the sending operation just started => 
+                            // the external system has to wait until this variable goes again to true
+                            // -------------------------------------------------------------------------------------
+                            nextCycleStarted_ = false;
                         }
                         else
                         {

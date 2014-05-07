@@ -47,13 +47,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="commanddoc.xml" />
     <Content Include="filesOnController\KukaRobotInfo_max.xml" />
     <Content Include="filesOnController\KukaRobotInfo_min.xml" />
     <Content Include="filesOnController\KukaRobotInfo.xml" />
+    <Content Include="workingXML\KukaRobotInfo.xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="commanddoc.xsd" />
     <None Include="filesOnController\KukaMatlabConnection_max.dat" />
     <None Include="filesOnController\KukaMatlabConnection_max.src" />
     <None Include="filesOnController\KukaMatlabConnection_min.dat" />
@@ -61,10 +60,12 @@
     <None Include="filesOnController\KukaMatlabConnection.dat" />
     <None Include="filesOnController\KukaMatlabConnection.src" />
     <None Include="filesOnController\README.md" />
+    <None Include="workingXML\devnet.ini" />
+    <None Include="workingXML\iosys.ini" />
+    <None Include="workingXML\KukaMatlabConnection.dat" />
+    <None Include="workingXML\KukaMatlabConnection.src" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="workingXML\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
