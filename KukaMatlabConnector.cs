@@ -1295,6 +1295,13 @@ namespace KukaMatlabConnector
             return uiError;
         }
 
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    start synchron AKorr Mode (Axis correction mode)
+         *            
+         *  @retval   bool ... set to true if an error happens
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         public bool startSynchronAKorr()
         {
             bool localReturn;
@@ -1313,11 +1320,29 @@ namespace KukaMatlabConnector
             return localReturn;
         }
 
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    if synchron mode is not needed anymore, call this method => it ends the synchron mode
+         *            
+         *  @retval   none
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         public void endSynchronAKorr()
         {
             synchronModeAKorrActive_ = false;
+
+            modifyAKorr("A:0:0:0:0:0:0");
         }
 
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    if synchron mode is started you can enter here a new buffer entry which is read with every cycle step of the connector
+         *            
+         *  @param    command ... the command which the robot has to do. in this case it has to be A:0.23:3:2:1:3:3
+         * 
+         *  @retval   bool ... set to true if an error happens
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         public bool modifyAKorrSynchron( String command )
         {
             bool errReturn = false;
@@ -1369,6 +1394,13 @@ namespace KukaMatlabConnector
             return (errReturn);
         }
 
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    start synchron RKorr Mode (cartesian correction mode)
+         *            
+         *  @retval   bool ... set to true if an error happens
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         public bool startSynchronRKorr()
         {
             bool localReturn;
@@ -1387,11 +1419,29 @@ namespace KukaMatlabConnector
             return localReturn;
         }
 
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    if synchron mode is not needed anymore, call this method => it ends the synchron mode
+         *            
+         *  @retval   none
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         public void endSynchronRKorr()
         {
             synchronModeRKorrActive_ = false;
+
+            modifyAKorr("R:0:0:0:0:0:0");
         }
 
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    if synchron mode is started you can enter here a new buffer entry which is read with every cycle step of the connector
+         *            
+         *  @param    command ... the command which the robot has to do. in this case it has to be R:0.23:3:2:1:3:3
+         * 
+         *  @retval   bool ... set to true if an error happens
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         public bool modifyRKorrSynchron(String command)
         {
             bool errReturn = false;
