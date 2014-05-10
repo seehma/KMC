@@ -60,7 +60,6 @@ namespace KukaMatlabConnector
 
         // ip address on which the server has to listen
         System.Net.IPAddress robotListenIPAddress_;
-        System.Net.IPAddress robotIPAddress_;
 
         // path to valid xml document which has to be sent to the robot in the specific cycle
         String pathToCommandXMLDocument_;
@@ -210,8 +209,6 @@ namespace KukaMatlabConnector
                 makeLoggingEntry("please give a correct IP-address...");
                 iError = 1;
             }
-
-            robotIPAddress_ = System.Net.IPAddress.Parse("192.168.2.3");
 
             // --------------------------------------------------
             // initialize comBuffer and according variables
@@ -522,7 +519,7 @@ namespace KukaMatlabConnector
             setCommandString(getCommandInnerXML());
 
             // check if the ipAddress is set
-            if (robotIPAddress_ != null)
+            if (robotListenIPAddress_ != null)
             {
                 while ((getRobotConnectionState() == ConnectionState.running) || (getRobotConnectionState() == ConnectionState.starting))
                 {
@@ -532,9 +529,6 @@ namespace KukaMatlabConnector
                     comRobotHandlerUDP_ = new System.Net.Sockets.Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
                     // create an IPEndPoint with the previosly selected IPAddress and communication port
-                    robotEndPoint = new System.Net.IPEndPoint(robotIPAddress_, (int)robotCommunicationPort_);
-
-                    // create an IPEndPoint with the previosly selected IPAddress and communication port
                     localEndPoint = new System.Net.IPEndPoint(robotListenIPAddress_, (int)robotCommunicationPort_);
 
                     // create udp client
@@ -542,7 +536,7 @@ namespace KukaMatlabConnector
 
                     // now start the server and periodically receive the robot data and send the prepared XML file
                     // should stay in the following line till the connection is refused
-                    robotServerLoopUDP(comRobotHandlerUDP_, robotListener, robotEndPoint);
+                    robotServerLoopUDP(comRobotHandlerUDP_, robotListener);
                 }
             }
             else
@@ -717,7 +711,7 @@ namespace KukaMatlabConnector
             }
         }
 
-        private void robotServerLoopUDP(System.Net.Sockets.Socket comHandler, System.Net.Sockets.UdpClient robotListener, System.Net.IPEndPoint robotEndPoint)
+        private void robotServerLoopUDP(System.Net.Sockets.Socket comHandler, System.Net.Sockets.UdpClient robotListener)
         {
             // variable declarations
             byte[] sendMessage;
@@ -725,8 +719,8 @@ namespace KukaMatlabConnector
             String localInfoString;
 
             // create testEndpoint for the reference in udp client listener
-            System.Net.IPEndPoint testEndPoint;
-            testEndPoint = null;
+            System.Net.IPEndPoint robotEndPoint;
+            robotEndPoint = null;
 
             // variable initializations
             sendMessage = new Byte[2048];
@@ -756,7 +750,7 @@ namespace KukaMatlabConnector
                 // ------------------------------------------------------------
                 try
                 {
-                    localIncomingDataByteBuffer = robotListener.Receive(ref testEndPoint);
+                    localIncomingDataByteBuffer = robotListener.Receive(ref robotEndPoint);
                     if (localIncomingDataByteBuffer.Length == 0)
                     {
                         makeLoggingEntry("client closed connection (bytesReceived=0)");
@@ -826,6 +820,7 @@ namespace KukaMatlabConnector
                             sendMessage = System.Text.Encoding.ASCII.GetBytes(localCommandString);
 
                             // send data to robot
+                            robotEndPoint.Port = 6008;
                             comHandler.SendTo(sendMessage, robotEndPoint);
 
                             sendPackagesCount_++;
