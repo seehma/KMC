@@ -148,8 +148,9 @@ namespace KukaMatlabConnector
             public double Korr4; // filled with AKorr4 in case of AKorr mode active and RKorrA in case of RKorr mode active
             public double Korr5; // filled with AKorr5 in case of AKorr mode active and RKorrB in case of RKorr mode active
             public double Korr6; // filled with AKorr6 in case of AKorr mode active and RKorrC in case of RKorr mode active
+            public bool endSyncKorr;
 
-            public synchronKorrBufferStruct(double extKorr1, double extKorr2, double extKorr3, double extKorr4, double extKorr5, double extKorr6)
+            public synchronKorrBufferStruct(double extKorr1, double extKorr2, double extKorr3, double extKorr4, double extKorr5, double extKorr6, bool extEndSyncKorr)
             {
                 Korr1 = extKorr1;
                 Korr2 = extKorr2;
@@ -157,6 +158,7 @@ namespace KukaMatlabConnector
                 Korr4 = extKorr4;
                 Korr5 = extKorr5;
                 Korr6 = extKorr6;
+                endSyncKorr = extEndSyncKorr;
             }
         }
 
@@ -936,6 +938,12 @@ namespace KukaMatlabConnector
                     modifyAKorrVariable("AKorr5", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr5.ToString());
                     modifyAKorrVariable("AKorr6", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr6.ToString());
 
+                    if (synchronKorrBuffer_[synchronKorrBufferReadPointer_].endSyncKorr == true)
+                    {
+                        synchronModeAKorrActive_ = false;
+                        modifyAKorr( "A:0:0:0:0:0:0" );
+                    }
+
                     incrementSynchronKorrReadPointer();
                 }
             }
@@ -960,6 +968,12 @@ namespace KukaMatlabConnector
                     modifyRKorrVariable("RKorrA", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr4.ToString());
                     modifyRKorrVariable("RKorrB", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr5.ToString());
                     modifyRKorrVariable("RKorrC", synchronKorrBuffer_[synchronKorrBufferReadPointer_].Korr6.ToString());
+
+                    if (synchronKorrBuffer_[synchronKorrBufferReadPointer_].endSyncKorr == true)
+                    {
+                        synchronModeAKorrActive_ = false;
+                        modifyAKorr( "R:0:0:0:0:0:0" );
+                    }
 
                     incrementSynchronKorrReadPointer();
                 }
@@ -1331,7 +1345,7 @@ namespace KukaMatlabConnector
         {
             synchronModeAKorrActive_ = false;
 
-            modifyAKorr("A:0:0:0:0:0:0");
+            enterAKorrSyncBufferEntry("A:0:0:0:0:0:0", true);
         }
 
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
@@ -1346,6 +1360,25 @@ namespace KukaMatlabConnector
         public bool modifyAKorrSynchron( String command )
         {
             bool errReturn = false;
+
+            errReturn = enterAKorrSyncBufferEntry(command, false);
+
+            return (errReturn);
+        }
+
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    enters the AKorr command into the buffer, also used to mark the end of synchron mode with endSync flag
+         *            
+         *  @param    command ... the command which the robot has to do. in this case it has to be A:0.23:3:2:1:3:3
+         *  @param    bool ... if true the method enters the end of the synchron mode into the buffer
+         * 
+         *  @retval   bool ... set to true if an error happens
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */        
+        private bool enterAKorrSyncBufferEntry(String command, bool endSync)
+        {
+            bool errReturn = false;
             uint localWritePointer;
             String localCommandString = command;
             String localKorrType = null;
@@ -1356,7 +1389,7 @@ namespace KukaMatlabConnector
                 // safe write pointer
                 localWritePointer = synchronKorrBufferWritePointer_;
                 // increment write pointer
-                if( !incrementSynchronKorrWritePointer() )
+                if (!incrementSynchronKorrWritePointer())
                 {
                     localKorrAttributes = command.Split(':');
                     if (localKorrAttributes.Length == 7)
@@ -1371,6 +1404,7 @@ namespace KukaMatlabConnector
                             synchronKorrBuffer_[localWritePointer].Korr4 = Convert.ToDouble(localKorrAttributes[4]);
                             synchronKorrBuffer_[localWritePointer].Korr5 = Convert.ToDouble(localKorrAttributes[5]);
                             synchronKorrBuffer_[localWritePointer].Korr6 = Convert.ToDouble(localKorrAttributes[6]);
+                            synchronKorrBuffer_[localWritePointer].endSyncKorr = endSync;
                         }
                         else
                         {
@@ -1430,7 +1464,7 @@ namespace KukaMatlabConnector
         {
             synchronModeRKorrActive_ = false;
 
-            modifyAKorr("R:0:0:0:0:0:0");
+            enterRKorrSyncBufferEntry("R:0:0:0:0:0:0", true);
         }
 
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
@@ -1445,6 +1479,26 @@ namespace KukaMatlabConnector
         public bool modifyRKorrSynchron(String command)
         {
             bool errReturn = false;
+
+            errReturn = enterRKorrSyncBufferEntry(command, false);
+
+            return (errReturn);
+        }
+
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    enters the RKorr command into the buffer, also used to mark the end of synchron mode with endSync flag
+         *            
+         *  @param    command ... the command which the robot has to do. in this case it has to be R:0.23:3:2:1:3:3
+         *  @param    bool ... if true the method enters the end of the synchron mode into the buffer
+         * 
+         *  @retval   bool ... set to true if an error happens
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */   
+        private bool enterRKorrSyncBufferEntry(String command, bool endSync)
+        {
+            bool errReturn = false;
+
             uint localWritePointer;
             String localCommandString = command;
             String localKorrType = null;
@@ -1455,7 +1509,7 @@ namespace KukaMatlabConnector
                 // safe write pointer
                 localWritePointer = synchronKorrBufferWritePointer_;
                 // increment write pointer
-                if( !incrementSynchronKorrWritePointer() )
+                if (!incrementSynchronKorrWritePointer())
                 {
                     localKorrAttributes = command.Split(':');
                     if (localKorrAttributes.Length == 7)
@@ -1470,6 +1524,7 @@ namespace KukaMatlabConnector
                             synchronKorrBuffer_[localWritePointer].Korr4 = Convert.ToDouble(localKorrAttributes[4]);
                             synchronKorrBuffer_[localWritePointer].Korr5 = Convert.ToDouble(localKorrAttributes[5]);
                             synchronKorrBuffer_[localWritePointer].Korr6 = Convert.ToDouble(localKorrAttributes[6]);
+                            synchronKorrBuffer_[localWritePointer].endSyncKorr = endSync;
                         }
                         else
                         {
@@ -1491,6 +1546,25 @@ namespace KukaMatlabConnector
             }
 
             return (errReturn);
+        }
+
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    signals the external system if one of the two synchron modes are active
+         *            
+         *  @retval   bool ... true if synchron mode active, false if inactive
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        public bool isSynchronModeActive()
+        {
+            if (synchronModeAKorrActive_ == true || synchronModeRKorrActive_ == true)
+            {
+                return( true );
+            }
+            else
+            {
+                return( false );
+            }
         }
 
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
