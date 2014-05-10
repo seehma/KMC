@@ -3,6 +3,7 @@
       <IP_NUMBER>192.0.1.2</IP_NUMBER>    <!-- IP Number of the socket !-->
       <PORT>6008</PORT>                   <!-- Port Number of the socket !-->
       <PROTOCOL>TCP</PROTOCOL>            <!-- TCP or UDP, Protocol of the socket !-->
+      <!--<SENTYPE>ImFree</SENTYPE> -->          <!-- The name of your system send in <Sen Type="" > !-->
       <SENTYPE>KMC</SENTYPE>
       <PROTCOLLENGTH>Off</PROTCOLLENGTH>  <!-- On or Off, Send the length of data in bytes before XML data begins!-->
       <ONLYSEND>FALSE</ONLYSEND>          <!-- TRUE means the client don't expect a answer. Do not send anything to robot!-->
@@ -23,12 +24,18 @@
          <ELEMENT TAG="DEF_ASPos" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
          <ELEMENT TAG="DEF_MACur" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
          <ELEMENT TAG="DEF_Delay" TYPE="LONG" INDX="INTERNAL" UNIT="0" />
-         <ELEMENT TAG="FTC.Fx" TYPE="DOUBLE" INDX="1" UNIT="0" />
-         <ELEMENT TAG="FTC.Fy" TYPE="DOUBLE" INDX="2" UNIT="0" />
-         <ELEMENT TAG="FTC.Fz" TYPE="DOUBLE" INDX="3" UNIT="0" />
-         <ELEMENT TAG="FTC.Tx" TYPE="DOUBLE" INDX="4" UNIT="0" />
-         <ELEMENT TAG="FTC.Ty" TYPE="DOUBLE" INDX="5" UNIT="0" />
-         <ELEMENT TAG="FTC.Tz" TYPE="DOUBLE" INDX="6" UNIT="0" />
+         <ELEMENT TAG="DEF_Tech.C1" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="DiL" TYPE="LONG" INDX="1" UNIT="0" />
+         <ELEMENT TAG="Digout.o1" TYPE="BOOL" INDX="2" UNIT="0" />
+         <ELEMENT TAG="Digout.o2" TYPE="BOOL" INDX="3" UNIT="0" />
+         <ELEMENT TAG="Digout.o3" TYPE="BOOL" INDX="4" UNIT="0" />
+         <ELEMENT TAG="ST_Source" TYPE="DOUBLE" INDX="5" UNIT="3601" />
+         <ELEMENT TAG="FT.Fx" TYPE="DOUBLE" INDX="6" UNIT="0" />
+         <ELEMENT TAG="FT.Fy" TYPE="DOUBLE" INDX="7" UNIT="0" />
+         <ELEMENT TAG="FT.Fz" TYPE="DOUBLE" INDX="8" UNIT="0" />
+         <ELEMENT TAG="FT.Tx" TYPE="DOUBLE" INDX="9" UNIT="0" />
+         <ELEMENT TAG="FT.Ty" TYPE="DOUBLE" INDX="10" UNIT="0" />
+         <ELEMENT TAG="FT.Tz" TYPE="DOUBLE" INDX="11" UNIT="0" />
       </ELEMENTS>
    </SEND>
    <RECEIVE>
@@ -46,7 +53,8 @@
          <ELEMENT TAG="AKorr.A4" TYPE="DOUBLE" INDX="10" UNIT="0" HOLDON="0" />
          <ELEMENT TAG="AKorr.A5" TYPE="DOUBLE" INDX="11" UNIT="0" HOLDON="0" />
          <ELEMENT TAG="AKorr.A6" TYPE="DOUBLE" INDX="12" UNIT="0" HOLDON="0" />
-         <ELEMENT TAG="DiO" TYPE="LONG" INDX="13" UNIT="0" />
+         <ELEMENT TAG="DEF_Tech.T2" TYPE="DOUBLE" INDX="INTERNAL" UNIT="0" />
+         <ELEMENT TAG="DiO" TYPE="LONG" INDX="13" UNIT="0" HOLDON="1" />
       </ELEMENTS>
    </RECEIVE>
 </ROOT>

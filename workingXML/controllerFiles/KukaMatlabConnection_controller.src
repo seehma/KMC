@@ -1,0 +1,281 @@
+&ACCESS RVP
+&REL 88
+&PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
+&PARAM EDITMASK = *
+DEF KukaMatlabConnection( )
+; =============================================
+; 
+; First Testprogramm to initiate PathCorrection
+; from external PC
+; Type: RSI Object
+;
+; =============================================
+;FOLD Overview notes
+; =============================================
+;  NAME: Matthias Seehauser
+; =============================================
+;ENDFOLD
+
+;FOLD INI
+  ;FOLD BASISTECH INI
+    GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )
+    INTERRUPT ON 3 
+    BAS (#INITMOV,0 )
+  ;ENDFOLD (BASISTECH INI)
+  ;FOLD USER INI
+    ;Make your modifications here
+
+  ;ENDFOLD (USER INI)
+;ENDFOLD (INI)
+
+HALT
+; The current position will be used as SAK movement!
+PTP $POS_ACT
+; !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
+;---------------------------------------------------------
+; Create RSI Object ST_ETHERNET, 
+; read object configuration from .../INIT/RSIEthernet.xml
+;---------------------------------------------------------
+err = ST_ETHERNET(hEthernet,0,"KukaRobotInfo.xml")
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+
+;---------------------------------------------------------
+; Set some Configuration Parameters
+;---------------------------------------------------------
+;After "value" to late packages the robot stopps
+err = ST_SETPARAM(hEthernet,eERXmaxLatePackages,100) 
+
+
+;RSIWARNING if the limit reached
+err = ST_SETPARAM(hEthernet,eERXmaxLateInPercent,50) 
+;reset every 'value' statistics. 
+;err = ST_SETPARAM(hEthernet,eERXmaxFieldOfView,1000) 
+;eERXFastCycle = FALSE: Time to answer 11ms 
+;eERXFastCycle = TRUE: Fast cycle: answer <2ms necessary!
+err = ST_SETPARAM(hEthernet, eERXFastCycle, 0)       
+;$FLAG[1] will be set in case off errors
+;  err = ST_SETPARAM(hEthernet, eERXerrorFlag, 1)      
+err=ST_SETPARAM(hEthernet, eERXprecision, 4)
+
+;---------------------------------------------------------
+; initialize Path and axis correction
+;---------------------------------------------------------
+err=ST_PATHCORR(hPath,0)
+err=ST_AXISCORR(hAxis,0)
+
+; ----------------------------------------------------------
+; Maximale Path Korrrektur fuer die Kart. TCP Korr.
+; ----------------------------------------------------------
+err=ST_SETPARAM(hPath,1,-5)  ; range X
+err=ST_SETPARAM(hPath,7,380)
+err=ST_SETPARAM(hPath,2,-540); range Y
+err=ST_SETPARAM(hPath,8,540)
+err=ST_SETPARAM(hPath,3,-100); range Z
+err=ST_SETPARAM(hPath,9,230)
+err=ST_SETPARAM(hPath,4,-90) ; range A
+err=ST_SETPARAM(hPath,10,90)
+err=ST_SETPARAM(hPath,5,-45) ; range B
+err=ST_SETPARAM(hPath,11,45)
+err=ST_SETPARAM(hPath,6,-90) ; range C
+err=ST_SETPARAM(hPath,12,90)
+
+; ----------------------------------------------------------
+; Maximale Path Korrrektur anpassen für die Achswinkel
+; ---------------------------------------------------------
+err=ST_SETPARAM(hAxis,2,-90) ; range A1
+err=ST_SETPARAM(hAxis,14,90)
+err=ST_SETPARAM(hAxis,3,-10) ; range A2
+err=ST_SETPARAM(hAxis,15,10)
+err=ST_SETPARAM(hAxis,4,-10) ; range A3
+err=ST_SETPARAM(hAxis,16,10)
+err=ST_SETPARAM(hAxis,5,-360) ; range A4
+err=ST_SETPARAM(hAxis,17,360)
+err=ST_SETPARAM(hAxis,6,-90) ; range A5
+err=ST_SETPARAM(hAxis,18,90)
+err=ST_SETPARAM(hAxis,7,-350) ; range A6
+err=ST_SETPARAM(hAxis,19,350)
+
+;FOLD RSI-Objects to link in ST_Ethernet
+;---------------------------------------------------------
+; read $IN[1-16]
+;---------------------------------------------------------
+err = ST_DIGIN(hDin,0,1,2,0)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hDin,1,hEthernet,1) 
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+
+;---------------------------------------------------------
+; read $OUT[1-3]
+;---------------------------------------------------------
+err = ST_DIGOUT(hDout1,0,1,0,0)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF 
+err = ST_DIGOUT(hDout2,0,2,0,0) 
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_DIGOUT(hDout3,0,3,0,0)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hDout1,1,hEthernet,2) 
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hDout2,1,hEthernet,3) 
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hDout3,1,hEthernet,4)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+
+;---------------------------------------------------------
+; make sine signal 
+;---------------------------------------------------------
+UNIT_RSI = 3601
+err = ST_SOURCE(hsource,0,UNIT_RSI)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_SETPARAM(hsource,1,1)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_SETPARAM(hsource,3,50)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hsource,1,hEthernet,5)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+;ENDFOLD
+
+; ---------------------------------------------------------
+; Variablen fuer die Analogeingaenge
+; ---------------------------------------------------------
+err = ST_ANAIN(hAnaIn1,0,1,RSIUNIT_No)
+err = ST_ANAIN(hAnaIn2,0,2,RSIUNIT_No)
+err = ST_ANAIN(hAnaIn3,0,3,RSIUNIT_No)
+err = ST_ANAIN(hAnaIn4,0,4,RSIUNIT_No)
+err = ST_ANAIN(hAnaIn5,0,5,RSIUNIT_No)
+err = ST_ANAIN(hAnaIn6,0,6,RSIUNIT_No)
+err = ST_ANAIN(hAnaIn7,0,7,RSIUNIT_No)
+err = ST_NEWLINK(hAnaIn1,1,hEthernet,6)
+err = ST_NEWLINK(hAnaIn2,1,hEthernet,7)
+err = ST_NEWLINK(hAnaIn3,1,hEthernet,8)
+err = ST_NEWLINK(hAnaIn4,1,hEthernet,9)
+err = ST_NEWLINK(hAnaIn5,1,hEthernet,10)
+err = ST_NEWLINK(hAnaIn6,1,hEthernet,11)
+err = ST_NEWLINK(hAnaIn7,1,hEthernet,12)
+
+;FOLD RSI-Objects to link out of ST_Ethernet
+;---------------------------------------------------------
+; link RKorr to correction on path
+;---------------------------------------------------------
+err = ST_NEWLINK(hEthernet,1,hPath,1)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hEthernet,2,hPath,2)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hEthernet,3,hPath,3)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hEthernet,4,hPath,4)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hEthernet,5,hPath,5)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hEthernet,6,hPath,6)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hEthernet,7,hAxis,1)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hEthernet,8,hAxis,2)
+err = ST_NEWLINK(hEthernet,9,hAxis,3)
+err = ST_NEWLINK(hEthernet,10,hAxis,4)
+err = ST_NEWLINK(hEthernet,11,hAxis,5)
+err = ST_NEWLINK(hEthernet,12,hAxis,6)
+
+
+;---------------------------------------------------------
+; DiO map to $OUT[8-24] 
+;---------------------------------------------------------
+err = ST_MAP2DIGOUT(hMapDio,0,hEthernet,13,2,2)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+; show RKorr on $SEN_PREA[1-6]
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,1,1)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,2,2)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,3,3)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,4,4)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,5,5)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,6,6)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+
+; show DiO on $SEN_PINT[1]
+err = ST_MAP2SEN_PINT(hmap,0,hEthernet,13,1)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+;ENDFOLD
+
+;---------------------------------------------------------
+; Start sensor based movement on BASE coordinate system
+;---------------------------------------------------------
+err = ST_ON1(#BASE,1)
+;err = ST_ON1(#TCP,1)
+;err = ST_ON1(#WORLD,1)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+
+
+; *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=**=*=*=*=*=*=*=*=*=*=*
+ST_SKIPSENS() ;Hold on - until RSI-Break reason occur
+; *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=**=*=*=*=*=*=*=*=*=*=*
+
+PTP $POS_ACT
+
+END

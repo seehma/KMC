@@ -1,8 +1,8 @@
 &ACCESS RVP
-&REL 57
+&REL 3
 &PARAM TEMPLATE = C:\KRC\Roboter\Template\vorgabe
 &PARAM EDITMASK = *
-DEF KukaMatlabConnection( )
+DEF KukaMatlabConDemo( )
 ; =============================================
 ; 
 ; Second Testprog to initiate PathCorrection
@@ -39,9 +39,9 @@ PTP $POS_ACT ; use current position as SAK movement
 
 ;---------------------------------------------------------
 ; Create RSI Object ST_ETHERNET, 
-; read object config from .../INIT/KukaRobotInfo_max.xml
+; read object config from .../INIT/KukaRobotInfo_demo.xml
 ;---------------------------------------------------------
-err = ST_ETHERNET(hEthernet,0,"KukaRobotInfo_max.xml")
+err = ST_ETHERNET(hEthernet,0,"KukaRobotInfo_demo.xml")
 IF (err <> #RSIOK) THEN
   HALT
 ENDIF
@@ -88,18 +88,137 @@ err=ST_SETPARAM(hPath,12,90)
 ; ----------------------------------------------------------
 ; maximum path correction for the axis correction AKorr
 ; ---------------------------------------------------------
-err=ST_SETPARAM(hAxis,2,-10); range A1
+err=ST_SETPARAM(hAxis,2,-10) ; range A1
 err=ST_SETPARAM(hAxis,14,10)
 err=ST_SETPARAM(hAxis,3,-10) ; range A2
 err=ST_SETPARAM(hAxis,15,10)
-err=ST_SETPARAM(hAxis,4,-10); range A3
+err=ST_SETPARAM(hAxis,4,-10) ; range A3
 err=ST_SETPARAM(hAxis,16,10)
-err=ST_SETPARAM(hAxis,5,-10); range A4
+err=ST_SETPARAM(hAxis,5,-10) ; range A4
 err=ST_SETPARAM(hAxis,17,10)
 err=ST_SETPARAM(hAxis,6,-10) ; range A5
 err=ST_SETPARAM(hAxis,18,10)
-err=ST_SETPARAM(hAxis,7,-10)
+err=ST_SETPARAM(hAxis,7,-10) ; range A6
 err=ST_SETPARAM(hAxis,19,10)
+
+;FOLD RSI-Objects to link in ST_Ethernet
+;---------------------------------------------------------
+; read $IN[1-16]
+;---------------------------------------------------------
+err = ST_DIGIN(hDin,0,1,2,0)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hDin,1,hEthernet,1) 
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+
+;---------------------------------------------------------
+; read $OUT[1-3]
+;---------------------------------------------------------
+err = ST_DIGOUT(hDout1,0,1,0,0)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF 
+err = ST_DIGOUT(hDout2,0,2,0,0) 
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_DIGOUT(hDout3,0,3,0,0)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hDout1,1,hEthernet,2) 
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hDout2,1,hEthernet,3) 
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hDout3,1,hEthernet,4)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+
+;---------------------------------------------------------
+; make sine signal 
+;---------------------------------------------------------
+UNIT_RSI = 3601
+err = ST_SOURCE(hsource,0,UNIT_RSI)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_SETPARAM(hsource,1,1)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_SETPARAM(hsource,3,50)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hsource,1,hEthernet,5)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+;ENDFOLD
+
+;---------------------------------------------------------
+; create analog input objects
+;---------------------------------------------------------
+err = ST_ANAIN(hAnaIn1,0,1,RSIUNIT_No)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_ANAIN(hAnaIn2,0,2,RSIUNIT_No)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_ANAIN(hAnaIn3,0,3,RSIUNIT_No)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_ANAIN(hAnaIn4,0,4,RSIUNIT_No)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_ANAIN(hAnaIn5,0,5,RSIUNIT_No)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_ANAIN(hAnaIn6,0,6,RSIUNIT_No)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+
+;---------------------------------------------------------
+; connect those analog input objects to ST_ETHERNET
+;---------------------------------------------------------
+err = ST_NEWLINK(hAnaIn1,1,hEthernet,6)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hAnaIn2,1,hEthernet,7)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hAnaIn3,1,hEthernet,8)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hAnaIn4,1,hEthernet,9)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hAnaIn5,1,hEthernet,10)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
+err = ST_NEWLINK(hAnaIn6,1,hEthernet,11)
+IF (err <> #RSIOK) THEN
+  HALT
+ENDIF
 
 ;---------------------------------------------------------
 ; link RKorr to correction on path
@@ -157,130 +276,6 @@ IF (err <> #RSIOK) THEN
   HALT
 ENDIF
 
-;---------------------------------------------------------
-; read $IN[1-16]
-;---------------------------------------------------------
-err = ST_DIGIN(hDin,0,1,2,0)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hDin,1,hEthernet,1) 
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-
-;---------------------------------------------------------
-; read $OUT[1-3]
-;---------------------------------------------------------
-err = ST_DIGOUT(hDout1,0,1,0,0)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF 
-err = ST_DIGOUT(hDout2,0,2,0,0) 
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_DIGOUT(hDout3,0,3,0,0)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hDout1,1,hEthernet,2) 
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hDout2,1,hEthernet,3) 
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hDout3,1,hEthernet,4)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-
-;---------------------------------------------------------
-; make sine signal 
-;---------------------------------------------------------
-UNIT_RSI = 3601
-err = ST_SOURCE(hSource,0,UNIT_RSI)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_SETPARAM(hSource,1,1)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_SETPARAM(hSource,3,50)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hSource,1,hEthernet,5)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-
-;---------------------------------------------------------
-; create analog input objects
-;---------------------------------------------------------
-err = ST_ANAIN(hAnaIn1,0,1,RSIUNIT_No)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_ANAIN(hAnaIn2,0,2,RSIUNIT_No)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_ANAIN(hAnaIn3,0,3,RSIUNIT_No)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_ANAIN(hAnaIn4,0,4,RSIUNIT_No)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_ANAIN(hAnaIn5,0,5,RSIUNIT_No)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_ANAIN(hAnaIn6,0,6,RSIUNIT_No)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_ANAIN(hAnaIn7,0,7,RSIUNIT_No)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-
-;---------------------------------------------------------
-; connect those analog input objects to ST_ETHERNET
-;---------------------------------------------------------
-err = ST_NEWLINK(hAnaIn1,1,hEthernet,6)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hAnaIn2,1,hEthernet,7)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hAnaIn3,1,hEthernet,8)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hAnaIn4,1,hEthernet,9)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hAnaIn5,1,hEthernet,10)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hAnaIn6,1,hEthernet,11)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
-err = ST_NEWLINK(hAnaIn7,1,hEthernet,12)
-IF (err <> #RSIOK) THEN
-  HALT
-ENDIF
 
 ;---------------------------------------------------------
 ; DiO map to $OUT[8-24] 
@@ -290,38 +285,37 @@ IF (err <> #RSIOK) THEN
   HALT
 ENDIF
 ; show RKorr on $SEN_PREA[1-6]
-err = ST_MAP2SEN_PREA(hMap,0,hEthernet,1,1)
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,1,1)
 IF (err <> #RSIOK) THEN
   HALT
 ENDIF
-err = ST_MAP2SEN_PREA(hMap,0,hEthernet,2,2)
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,2,2)
 IF (err <> #RSIOK) THEN
   HALT
 ENDIF
-err = ST_MAP2SEN_PREA(hMap,0,hEthernet,3,3)
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,3,3)
 IF (err <> #RSIOK) THEN
   HALT
 ENDIF
-err = ST_MAP2SEN_PREA(hMap,0,hEthernet,4,4)
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,4,4)
 IF (err <> #RSIOK) THEN
   HALT
 ENDIF
-err = ST_MAP2SEN_PREA(hMap,0,hEthernet,5,5)
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,5,5)
 IF (err <> #RSIOK) THEN
   HALT
 ENDIF
-err = ST_MAP2SEN_PREA(hMap,0,hEthernet,6,6)
+err = ST_MAP2SEN_PREA(hmap,0,hEthernet,6,6)
 IF (err <> #RSIOK) THEN
   HALT
 ENDIF
 
-;---------------------------------------------------------
 ; show DiO on $SEN_PINT[1]
-;---------------------------------------------------------
-err = ST_MAP2SEN_PINT(hMap,0,hEthernet,13,1)
+err = ST_MAP2SEN_PINT(hmap,0,hEthernet,13,1)
 IF (err <> #RSIOK) THEN
   HALT
 ENDIF
+;ENDFOLD
 
 ;---------------------------------------------------------
 ; Start sensor based movement on BASE coordinate system
@@ -343,6 +337,5 @@ ST_SKIPSENS()
 ; set actual position as active position
 ;---------------------------------------------------------
 PTP $POS_ACT
-
 
 END
