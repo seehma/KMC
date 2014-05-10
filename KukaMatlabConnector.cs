@@ -60,6 +60,7 @@ namespace KukaMatlabConnector
 
         // ip address on which the server has to listen
         System.Net.IPAddress robotListenIPAddress_;
+        System.Net.IPAddress robotIPAddress_;
 
         // path to valid xml document which has to be sent to the robot in the specific cycle
         String pathToCommandXMLDocument_;
@@ -105,6 +106,7 @@ namespace KukaMatlabConnector
 
         // socket which contains the connection to the robot controller
         System.Net.Sockets.Socket comRobotHandler_ = null;
+        System.Net.Sockets.Socket comRobotHandlerUDP_ = null;
 
         // current correction values in cartesian and axis values
         double RKorr_X_, RKorr_Y_, RKorr_Z_, RKorr_A_, RKorr_B_, RKorr_C_;
@@ -209,6 +211,8 @@ namespace KukaMatlabConnector
                 iError = 1;
             }
 
+            robotIPAddress_ = System.Net.IPAddress.Parse("192.168.2.3");
+
             // --------------------------------------------------
             // initialize comBuffer and according variables
             // --------------------------------------------------
@@ -304,7 +308,7 @@ namespace KukaMatlabConnector
          *  @retval   none
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        public uint initializeRobotListenThread()
+        public uint initializeRobotListenThreadTCP()
         {
             uint returnal = 0;
 
@@ -320,7 +324,7 @@ namespace KukaMatlabConnector
                 delayedPackagesCount_ = 0;
 
                 // create thread instance and set the threadpriority to the highest value
-                kukaListenThread_ = new System.Threading.Thread(new System.Threading.ThreadStart(kukaListener), 10000000);
+                kukaListenThread_ = new System.Threading.Thread(new System.Threading.ThreadStart(kukaListenerTCP), 10000000);
                 kukaListenThread_.Priority = System.Threading.ThreadPriority.Highest;
                 kukaListenThread_.Start();
 
@@ -337,7 +341,7 @@ namespace KukaMatlabConnector
                 delayedPackagesCount_ = 0;
 
                 // create thread instance and set the threadpriority to the highest value
-                kukaListenThread_ = new System.Threading.Thread(new System.Threading.ThreadStart(kukaListener), 10000000);
+                kukaListenThread_ = new System.Threading.Thread(new System.Threading.ThreadStart(kukaListenerTCP), 10000000);
                 kukaListenThread_.Priority = System.Threading.ThreadPriority.Highest;
                 kukaListenThread_.Start();
 
@@ -349,7 +353,27 @@ namespace KukaMatlabConnector
             }
 
             return (returnal);
-         }
+        }
+
+        public uint initializeRobotListenThreadUDP()
+        {
+            uint errReturn = 0;
+
+            // set connection state of task to starting
+            setRobotConnectionState(ConnectionState.starting);
+
+            // reset all statistic variables
+            receivedPackagesCount_ = 0;
+            sendPackagesCount_ = 0;
+            delayedPackagesCount_ = 0;
+
+            // create thread instance and set the threadpriority to the highest value
+            kukaListenThread_ = new System.Threading.Thread(new System.Threading.ThreadStart(kukaListenerUDP), 10000000);
+            kukaListenThread_.Priority = System.Threading.ThreadPriority.Highest;
+            kukaListenThread_.Start();
+
+            return (errReturn);
+        }
 
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         /**
@@ -450,7 +474,7 @@ namespace KukaMatlabConnector
          *  @retval    none
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        private void kukaListener()
+        private void kukaListenerTCP()
         {
             // prepare sendString for first transport to robot
             setCommandString(getCommandInnerXML());
@@ -467,7 +491,7 @@ namespace KukaMatlabConnector
                     {
                         // now start the server and periodically receive the robot data and send the prepared XML file
                         // should stay in the following line till the connection is refused
-                        robotServerLoop(comRobotHandler_);
+                        robotServerLoopTCP(comRobotHandler_);
 
                         // when the loop is finished then close the socket
                         comRobotHandler_.Close();
@@ -489,6 +513,49 @@ namespace KukaMatlabConnector
             setRobotConnectionState(ConnectionState.init);
         }
 
+        private void kukaListenerUDP()
+        {
+            System.Net.IPEndPoint robotEndPoint;
+            System.Net.IPEndPoint localEndPoint;
+
+            // prepare sendString for first transport to robot
+            setCommandString(getCommandInnerXML());
+
+            // check if the ipAddress is set
+            if (robotIPAddress_ != null)
+            {
+                while ((getRobotConnectionState() == ConnectionState.running) || (getRobotConnectionState() == ConnectionState.starting))
+                {
+                    // start the server and wait for the connection which has to be established from the kuka robot 
+                    // goto ST_SKIPSENS in the kuka robot programm...
+
+                    comRobotHandlerUDP_ = new System.Net.Sockets.Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+
+                    // create an IPEndPoint with the previosly selected IPAddress and communication port
+                    robotEndPoint = new System.Net.IPEndPoint(robotIPAddress_, (int)robotCommunicationPort_);
+
+                    // create an IPEndPoint with the previosly selected IPAddress and communication port
+                    localEndPoint = new System.Net.IPEndPoint(robotListenIPAddress_, (int)robotCommunicationPort_);
+
+                    // create udp client
+                    System.Net.Sockets.UdpClient robotListener = new System.Net.Sockets.UdpClient(localEndPoint);
+
+                    // now start the server and periodically receive the robot data and send the prepared XML file
+                    // should stay in the following line till the connection is refused
+                    robotServerLoopUDP(comRobotHandlerUDP_, robotListener, robotEndPoint);
+                }
+            }
+            else
+            {
+                // otherwise throw an error
+                makeLoggingEntry("no ip host entry found to connect => check network connection!");
+            }
+
+            makeLoggingEntry("connection closed, server closed, see you next time...");
+
+            setRobotConnectionState(ConnectionState.init);
+        }
+
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         /**
          *  @brief    server loop which waits for data from robot and answers with XML File
@@ -496,7 +563,7 @@ namespace KukaMatlabConnector
          *  @retval   none
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        private void robotServerLoop(System.Net.Sockets.Socket comHandler)
+        private void robotServerLoopTCP(System.Net.Sockets.Socket comHandler)
         {
             // variable declarations
             byte[] localIncomingDataByteBuffer;                           // data buffer for incoming data
@@ -643,6 +710,158 @@ namespace KukaMatlabConnector
                 // close communication channel to robot if state changed to closing
                 // ----------------------------------------------------------------------------------------------
                 if ((getRobotConnectionState() == ConnectionState.closeRequest) ||(getRobotConnectionState() == ConnectionState.closing) )
+                {
+                    setRobotConnectionState(ConnectionState.closing);
+                    break;
+                }
+            }
+        }
+
+        private void robotServerLoopUDP(System.Net.Sockets.Socket comHandler, System.Net.Sockets.UdpClient robotListener, System.Net.IPEndPoint robotEndPoint)
+        {
+            // variable declarations
+            byte[] sendMessage;
+            String localCommandString;
+            String localInfoString;
+
+            // create testEndpoint for the reference in udp client listener
+            System.Net.IPEndPoint testEndPoint;
+            testEndPoint = null;
+
+            // variable initializations
+            sendMessage = new Byte[2048];
+
+            // first switch to listening, after one cycle switch to starting
+            setRobotConnectionState(ConnectionState.listening);
+
+            // --------------------------------------------------
+            // now lets start the endles loop
+            // --------------------------------------------------            
+            while (true)
+            {
+                byte[] localIncomingDataByteBuffer = null;                           // data buffer for incoming data
+
+                // reset and start the stopwatch to measure the time between two robot info cycles
+                stopWatch_.Reset();
+                stopWatch_.Start();
+
+                // command the garbage collector to collect at the beginning of each cycle
+                System.GC.Collect();
+
+                // signal to the connected application that the command data is ready to be modified
+                nextCycleStarted_ = true;
+
+                // ------------------------------------------------------------
+                // wait for data and receive bytes
+                // ------------------------------------------------------------
+                try
+                {
+                    localIncomingDataByteBuffer = robotListener.Receive(ref testEndPoint);
+                    if (localIncomingDataByteBuffer.Length == 0)
+                    {
+                        makeLoggingEntry("client closed connection (bytesReceived=0)");
+                        setRobotConnectionState(ConnectionState.closing);
+                        break; // client closed socket
+                    }
+
+                    if (getRobotConnectionState() == ConnectionState.listening)
+                    {
+                        // 
+                        robotListener.Client.ReceiveTimeout = 100;
+
+                        // set state to running after listening for the first cycle => so it changes first to listening and then to running
+                        setRobotConnectionState(ConnectionState.running);
+                    }
+
+                    // get string out of byte array
+                    localInfoString = System.Text.Encoding.ASCII.GetString(localIncomingDataByteBuffer, 0, localIncomingDataByteBuffer.Length);
+
+                    // start stopwatch for receiving task
+                    stopWatchReceive_.Reset();
+                    stopWatchReceive_.Start();
+
+                    // increment the packages counter
+                    receivedPackagesCount_++;
+                }
+                catch
+                {
+                    makeLoggingEntry("connection closed from remote host...\n\r");
+                    setRobotConnectionState(ConnectionState.closing);
+                    break;
+                }
+
+                stopWatchReceive_.Stop();
+
+                stopWatchSend_.Reset();
+                stopWatchSend_.Start();
+
+                // --------------------------------------------------------------
+                // only try to load the xml stuff when there is data available
+                // --------------------------------------------------------------
+                if (localIncomingDataByteBuffer != null)
+                {
+                    // -------------------------------------------------------------------------
+                    // check if the string is valid and then save it to the locally xml storage
+                    // -------------------------------------------------------------------------
+                    if (checkReceivedMessage(localIncomingDataByteBuffer) == true)
+                    {
+                        try
+                        {
+                            // check if there is synchron AKorr active
+                            doSynchronAKorr();
+
+                            // check if there is synchron RKorr active
+                            doSynchronRKorr();
+
+                            // get the sendString variable under mutex protection from getter method
+                            localCommandString = getCommandString();
+
+                            // get the receiveString variable under mutex protection from getter method
+                            localInfoString = getRobotInfoString();
+
+                            // mirror the IPO counter you received yet
+                            localCommandString = mirrorInterpolationCounter(localInfoString, localCommandString);
+
+                            // get bytes out of string
+                            sendMessage = System.Text.Encoding.ASCII.GetBytes(localCommandString);
+
+                            // send data to robot
+                            comHandler.SendTo(sendMessage, robotEndPoint);
+
+                            sendPackagesCount_++;
+
+                            // copy the edited string under mutex protection back
+                            setCommandString(localCommandString);
+                        }
+                        catch
+                        {
+                            makeLoggingEntry("could not send XML string");
+                        }
+                    }
+                }
+
+                stopWatchSend_.Stop();
+
+                stopWatch_.Stop();
+                communicationTimeMilliSeconds_ = stopWatch_.ElapsedMilliseconds;
+                communicationTimeTicks_ = stopWatch_.ElapsedTicks;
+
+                // ----------------------------------------------------------------------------------------------
+                // count the delayed packages
+                // ----------------------------------------------------------------------------------------------
+                if (communicationTimeMilliSeconds_ > 16)
+                {
+                    delayedPackagesCount_++;
+                    delayedPackagesMilliSecondsComm_ = communicationTimeMilliSeconds_;
+                    delayedPackagesMilliSecondsSend_ = stopWatchSend_.ElapsedTicks;
+                    delayedPackagesTicksComm_ = stopWatch_.ElapsedTicks;
+                    delayedPackagesMilliSecondsReceive_ = stopWatchReceive_.ElapsedTicks;
+                }
+
+                // ----------------------------------------------------------------------------------------------
+                // close communication channel to robot if state changed to closing
+                // ----------------------------------------------------------------------------------------------
+                if ((getRobotConnectionState() == ConnectionState.closeRequest) || (getRobotConnectionState() == ConnectionState.closing))
                 {
                     setRobotConnectionState(ConnectionState.closing);
                     break;
