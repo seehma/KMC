@@ -512,7 +512,6 @@ namespace KukaMatlabConnector
 
         private void kukaListenerUDP()
         {
-            System.Net.IPEndPoint robotEndPoint;
             System.Net.IPEndPoint localEndPoint;
 
             // prepare sendString for first transport to robot
@@ -820,7 +819,7 @@ namespace KukaMatlabConnector
                             sendMessage = System.Text.Encoding.ASCII.GetBytes(localCommandString);
 
                             // send data to robot
-                            robotEndPoint.Port = 6008;
+                            robotEndPoint.Port = (int)robotCommunicationPort_;
                             comHandler.SendTo(sendMessage, robotEndPoint);
 
                             sendPackagesCount_++;
