@@ -407,6 +407,54 @@ namespace KukaMatlabConnector
 
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         /**
+         *  @brief     Helper method for robot-listen-thread;
+         *             waits for the robot to establish a connection and then starts the communication task
+         * 
+         *  @retval    none
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        private void kukaListenerTCP()
+        {
+            // prepare sendString for first transport to robot
+            setCommandString(getCommandInnerXML());
+
+            // check if the ipAddress is set
+            if (robotListenIPAddress_ != null)
+            {
+                while ((getRobotConnectionState() == ConnectionState.running) || (getRobotConnectionState() == ConnectionState.starting))
+                {
+                    // start the server and wait for the connection which has to be established from the kuka robot 
+                    // goto ST_SKIPSENS in the kuka robot programm...
+                    comRobotHandler_ = startRobotComServerAndWaitForConnection();
+                    if (comRobotHandler_ != null)
+                    {
+                        // now start the server and periodically receive the robot data and send the prepared XML file
+                        // should stay in the following line till the connection is refused
+                        robotServerLoopTCP(comRobotHandler_);
+
+                        // when the loop is finished then close the socket
+                        comRobotHandler_.Close();
+                    }
+                    else
+                    {
+                        makeLoggingEntry("could not open the server-robot client connection => check network connection!");
+                    }
+                }
+            }
+            else
+            {
+                // otherwise throw an error
+                makeLoggingEntry("no ip host entry found to connect => check network connection!");
+            }
+
+            makeLoggingEntry("connection closed, server closed, see you next time...");
+
+            setRobotConnectionState(ConnectionState.init);
+        }
+
+
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
          *  @brief   starts the server and waits for a connection which has to be established from a client (robot or virtual)
          * 
          *  @retval  none
@@ -464,52 +512,15 @@ namespace KukaMatlabConnector
             return localComHandler;
         }
 
+
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         /**
-         *  @brief     robot listen thread starting helper method, connects to the robot and initiates the synchron communication
+         *  @brief     Helper method for robot-listen-thread;
+         *             listens on the previously defined udp port and waits till the robot initiates the connection
          * 
          *  @retval    none
          */
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
-        private void kukaListenerTCP()
-        {
-            // prepare sendString for first transport to robot
-            setCommandString(getCommandInnerXML());
-
-            // check if the ipAddress is set
-            if (robotListenIPAddress_ != null)
-            {
-                while ((getRobotConnectionState() == ConnectionState.running) || (getRobotConnectionState() == ConnectionState.starting))
-                {
-                    // start the server and wait for the connection which has to be established from the kuka robot 
-                    // goto ST_SKIPSENS in the kuka robot programm...
-                    comRobotHandler_ = startRobotComServerAndWaitForConnection();
-                    if (comRobotHandler_ != null)
-                    {
-                        // now start the server and periodically receive the robot data and send the prepared XML file
-                        // should stay in the following line till the connection is refused
-                        robotServerLoopTCP(comRobotHandler_);
-
-                        // when the loop is finished then close the socket
-                        comRobotHandler_.Close();
-                    }
-                    else
-                    {
-                        makeLoggingEntry("could not open the server-robot client connection => check network connection!");
-                    }
-                }
-            }
-            else
-            {
-                // otherwise throw an error
-                makeLoggingEntry("no ip host entry found to connect => check network connection!");
-            }
-
-            makeLoggingEntry("connection closed, server closed, see you next time...");
-
-            setRobotConnectionState(ConnectionState.init);
-        }
-
         private void kukaListenerUDP()
         {
             System.Net.IPEndPoint localEndPoint;
@@ -551,7 +562,9 @@ namespace KukaMatlabConnector
 
         /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         /**
-         *  @brief    server loop which waits for data from robot and answers with XML File
+         *  @brief    server loop which waits for data from robot and answers with XML File, prepared for TCP/IP protocol
+         *  
+         *  @param    comHandler ... Socket on which the whole communication is based
          * 
          *  @retval   none
          */
@@ -710,6 +723,16 @@ namespace KukaMatlabConnector
             }
         }
 
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
+        /**
+         *  @brief    server loop which waits for data from robot and answers with XML File, based on the UDP/IP protocol
+         * 
+         *  @param    comHandler ... Socket which is created after the connection is established
+         *  @param    robotListener ... .Net UDP-Client to receive the messages from the robot
+         *  
+         *  @retval   none
+         */
+        /* ----------------------------------------------------------------------------------------------------------------------------------------------- */
         private void robotServerLoopUDP(System.Net.Sockets.Socket comHandler, System.Net.Sockets.UdpClient robotListener)
         {
             // variable declarations
