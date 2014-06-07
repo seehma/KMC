@@ -70,7 +70,7 @@ err=ST_PATHCORR(hPath,0)
 err=ST_AXISCORR(hAxis,0)
 
 ; ----------------------------------------------------------
-; Maximale Path Korrrektur fuer die Kart. TCP Korr.
+; maximum path correction
 ; ----------------------------------------------------------
 err=ST_SETPARAM(hPath,1,-5)  ; range X
 err=ST_SETPARAM(hPath,7,380)
@@ -86,23 +86,23 @@ err=ST_SETPARAM(hPath,6,-90) ; range C
 err=ST_SETPARAM(hPath,12,90)
 
 ; ----------------------------------------------------------
-; Maximale Path Korrrektur anpassen für die Achswinkel
+; maximum axis correction
 ; ---------------------------------------------------------
-err=ST_SETPARAM(hAxis,2,-10); range A1
+err=ST_SETPARAM(hAxis,2,-10) ; range A1
 err=ST_SETPARAM(hAxis,14,10)
 err=ST_SETPARAM(hAxis,3,-10) ; range A2
 err=ST_SETPARAM(hAxis,15,10)
-err=ST_SETPARAM(hAxis,4,-10); range A3
+err=ST_SETPARAM(hAxis,4,-10) ; range A3
 err=ST_SETPARAM(hAxis,16,10)
-err=ST_SETPARAM(hAxis,5,-10); range A4
+err=ST_SETPARAM(hAxis,5,-10) ; range A4
 err=ST_SETPARAM(hAxis,17,10)
 err=ST_SETPARAM(hAxis,6,-10) ; range A5
 err=ST_SETPARAM(hAxis,18,10)
-err=ST_SETPARAM(hAxis,7,-10)
+err=ST_SETPARAM(hAxis,7,-10) ; range A6
 err=ST_SETPARAM(hAxis,19,10)
 
 ;---------------------------------------------------------
-; link RKorr to correction on path
+; link path correction to st_ethernet object
 ;---------------------------------------------------------
 err = ST_NEWLINK(hEthernet,1,hPath,1)
 IF (err <> #RSIOK) THEN
@@ -167,7 +167,6 @@ IF (err <> #RSIOK) THEN
   HALT
 ENDIF
 
-
 ;---------------------------------------------------------
 ; Hold on - until RSI-Break reason occur
 ;---------------------------------------------------------
@@ -177,7 +176,5 @@ ST_SKIPSENS()
 ; set actual position as active position
 ;---------------------------------------------------------
 PTP $POS_ACT
-
-
 
 END
